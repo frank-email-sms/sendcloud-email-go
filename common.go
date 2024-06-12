@@ -6,63 +6,20 @@ import (
 	"io"
 	"mime/multipart"
 	"net/textproto"
-	"os"
+	"net/url"
 	"strconv"
 	"strings"
 )
 
-type EmailCommonFields struct {
-	APIUser             string
-	APIKey              string
-	From                string
-	To                  string
-	Subject             string
-	ContentSummary      string
-	FromName            string
-	CC                  string
-	BCC                 string
-	ReplyTo             string
-	LabelName           string
-	Headers             string
-	Attachments         []*os.File
-	XSMTPAPI            string
-	SendRequestID       string
-	RespEmailID         bool
-	UseNotification     bool
-	UseAddressList      bool
-	boundary                string
-}
 
-type SendEmailArgs struct {
-	EmailCommonFields
-	HTML              string
-	Plain             string
-}
 
-type SendEmailTemplateArgs struct {
-	EmailCommonFields
-	TemplateInvokeName string
-}
+
 
 func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 
 	var partWriter io.Writer
 
 	var err error
-
-	if e.APIUser != "" {
-		err = writeMultipartText(multipartWriter, "apiUser", e.APIUser)
-        if err!= nil {
-            return err
-        }
-	}
-
-	if e.APIKey != "" {
-		err = writeMultipartText(multipartWriter, "apiKey", e.APIKey)
-        if err!= nil {
-            return err
-        }
-	}
 
 	if e.From != "" {
 		err = writeMultipartText(multipartWriter, "from", e.From)
@@ -149,8 +106,8 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 		}
 	}
 
-	if e.XSMTPAPI != "" {
-		err = writeMultipartText(multipartWriter, "xsmtpapi", e.XSMTPAPI)
+	if e.Xsmtpapi != "" {
+		err = writeMultipartText(multipartWriter, "xsmtpapi", e.Xsmtpapi)
 		if err != nil {
 			return err
 		}
@@ -190,19 +147,87 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 	return nil
 }
 
-func (e *SendEmailArgs) Marshal() (*bytes.Buffer, error) {
+func (client *SendCloud) PrepareSendCommonEmailParams(e *SendEmailArgs) (url.Values, error) {
+	params := url.Values{}
+	params.Set("apiUser", client.apiUser)
+	params.Set("apiKey", client.apiKey)
+	params.Set("from", e.From)
+	if e.To!= "" {
+		params.Set("to", e.To)
+	}
+	params.Set("subject", e.Subject)
+	if e.Html!= "" {
+        params.Set("html", e.Html)
+    }
+	if e.ContentSummary!= "" {
+        params.Set("contentSummary", e.ContentSummary)
+    }
+    if e.FromName!= "" {
+        params.Set("fromName", e.FromName)
+    }
+    if e.CC!= "" {
+        params.Set("cc", e.CC)
+    }
+    if e.BCC!= "" {
+        params.Set("bcc", e.BCC)
+    }
+    if e.ReplyTo!= "" {
+        params.Set("replyTo", e.ReplyTo)
+    }
+    if e.LabelName!= "" {
+        params.Set("labelName", e.LabelName)
+    }
+    if e.Headers!= "" {
+    	params.Set("headers", e.Headers)
+	}
+	if e.Xsmtpapi!= "" {
+		params.Set("xsmtpapi", e.Xsmtpapi)
+	}
+	if e.Plain!= "" {
+		params.Set("plain", e.Plain)
+	}
+	if e.SendRequestID!= "" {
+        params.Set("sendRequestId", e.SendRequestID)
+    }
+    if e.RespEmailID {
+		params.Set("respEmailId", strconv.FormatBool(e.RespEmailID))
+    }
+    if e.UseNotification {
+		params.Set("useNotification", strconv.FormatBool(e.UseNotification))
+	}
+	if e.UseAddressList {
+        params.Set("useAddressList", strconv.FormatBool(e.UseAddressList))
+    }
+	return params, nil
+}
+
+func (client *SendCloud) MarshalSendEmailArgs(e *SendEmailArgs) (*bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 	multipartWriter := multipart.NewWriter(&buf)
 	multipartWriter.Boundary()
 	var err error
+
+	if client.apiUser != "" {
+		err = writeMultipartText(multipartWriter, "apiUser", client.apiUser)
+		if err!= nil {
+			return nil,err
+		}
+	}
+
+	if client.apiKey != "" {
+		err = writeMultipartText(multipartWriter, "apiKey", client.apiKey)
+		if err!= nil {
+			return nil,err
+		}
+	}
 
 	err = e.multipart(multipartWriter)
 	if err != nil {
 		return nil, err
 	}
 
-	if e.HTML!= "" {
-		err = writeMultipartText(multipartWriter, "html", e.HTML)
+	if e.Html!= "" {
+		err = writeMultipartText(multipartWriter, "html", e.Html)
         if err!= nil {
             return nil, err
         }
@@ -219,17 +244,6 @@ func (e *SendEmailArgs) Marshal() (*bytes.Buffer, error) {
 	e.boundary = multipartWriter.Boundary()
 	return &buf, nil
 }
-
-
-
-
-type SendEmailResult struct {
-	Result     bool        `json:"result"`
-	StatusCode int         `json:"statusCode"`
-	Message    string      `json:"message"`
-	Info       interface{} `json:"info"`
-}
-
 
 
 func escapeQuotes(s string) string {

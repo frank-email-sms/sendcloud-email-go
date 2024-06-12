@@ -1,57 +1,56 @@
 package sendcloud_email_go
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 )
 
 const (
-	sendCommonPath  =  "/apiv2/mail/send"
-	sendTemplatePath  =  "/apiv2/mail/sendtemplate"
+	sendCommonPath   = "/apiv2/mail/send"
+	sendTemplatePath = "/apiv2/mail/sendtemplate"
 )
 
 func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArgs) (*SendEmailResult, error) {
 	if err := client.validateConfig(); err != nil {
-		return nil,fmt.Errorf("failed to send message: %w", err)
+		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
 	if err := validateSendCommonEmail(args); err != nil {
-		return nil,fmt.Errorf("failed to send message: %w", err)
+		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
+	var req *http.Request
+	var err error
+
 	if args.Attachments == nil {
-
-	}else {
-		payload, err := args.Marshal()
-		if err!= nil {
-            return nil,fmt.Errorf("failed to send message: %w", err)
-        }
-		req, err := http.NewRequest("POST", client.apiBase + sendCommonPath, payload)
-		if err!= nil {
-            return nil,fmt.Errorf("failed to send message: %w", err)
-        }
-        req.Header.Set("Content-Type", "multipart/form-data")
-		resp, err := client.request(ctx, req, &SendEmailResult{})
-		if err!= nil {
-			return nil,fmt.Errorf("failed to send message: %w", err)
-		}
-		body, err := io.ReadAll(resp.Body)
+		params, err := client.PrepareSendCommonEmailParams(args)
 		if err != nil {
-			return nil,fmt.Errorf("failed to read response body: %w", err)
+			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
-		var responseData SendEmailResult
-		if err := json.Unmarshal(body, &responseData); err != nil {
-			return nil,fmt.Errorf("failed to unmarshal response body: %w", err)
+		formDataEncoded := params.Encode()
+		req, err = http.NewRequest("POST", client.apiBase+sendCommonPath, bytes.NewBufferString(formDataEncoded))
+		if err != nil {
+			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
-		result := &responseData
-		if !result.Result {
-			return result,fmt.Errorf("Email sending failed: %s", result.Message)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+		payload, err := client.MarshalSendEmailArgs(args)
+		if err != nil {
+			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
-		return result,nil
+		req, err = http.NewRequest("POST", client.apiBase+sendCommonPath, payload)
+		if err != nil {
+			return nil, fmt.Errorf("failed to send email: %w", err)
+		}
+		req.Header.Set("Content-Type", "multipart/form-data")
 	}
-
+	responseData := new(SendEmailResult)
+	err = client.Request(ctx, req, &responseData)
+	if err != nil {
+		return nil, err
+	}
+	return responseData, nil
 }
 
 func validateSendCommonEmail(args *SendEmailArgs) error {

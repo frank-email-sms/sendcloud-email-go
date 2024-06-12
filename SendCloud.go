@@ -11,14 +11,14 @@ import (
 
 const APIBase string = "https://api.sendcloud.net"
 
-type  SendCloud struct {
-	apiUser    string
-	apiKey     string
-	apiBase	   string
+type SendCloud struct {
+	apiUser string
+	apiKey  string
+	apiBase string
 	client  *http.Client
 }
 
-func (client *SendCloud)validateConfig() error {
+func (client *SendCloud) validateConfig() error {
 	if len(client.apiBase) == 0 {
 		client.apiBase = APIBase
 	}
@@ -38,9 +38,9 @@ type Response struct {
 func NewSendCloud(apiUser string, apiKey string) (*SendCloud, error) {
 	switch {
 	case len(apiUser) == 0:
-		return nil,errors.New("smsUser cannot be empty")
+		return nil, errors.New("smsUser cannot be empty")
 	case len(apiKey) == 0:
-		return nil,errors.New("smsKey cannot be empty")
+		return nil, errors.New("smsKey cannot be empty")
 	}
 
 	sc := &SendCloud{
@@ -52,42 +52,34 @@ func NewSendCloud(apiUser string, apiKey string) (*SendCloud, error) {
 	return sc, nil
 }
 
-func (sc *SendCloud) request(ctx context.Context, req *http.Request, v interface{}) (*Response, error) {
+func (sc *SendCloud) Request(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
 	resp, err := sc.client.Do(req)
 	if err != nil {
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return ctx.Err()
 		default:
 		}
-		return nil, err
+		return err
 	}
 
 	if v != nil {
 		err = json.NewDecoder(resp.Body).Decode(v)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
-
-	response := newResponse(resp)
-
 	err = CheckResponse(resp)
 	if err != nil {
 		defer resp.Body.Close()
 		_, readErr := io.ReadAll(resp.Body)
 		if readErr != nil {
-			return response, readErr
+			return readErr
 		}
 	}
 
-	return response, err
-}
-
-func newResponse(r *http.Response) *Response {
-	response := &Response{Response: r}
-	return response
+	return err
 }
 
 type ErrorResponse struct {
@@ -112,5 +104,3 @@ func CheckResponse(r *http.Response) error {
 	}
 	return errorResponse
 }
-
-
