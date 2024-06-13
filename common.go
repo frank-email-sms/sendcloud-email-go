@@ -9,14 +9,89 @@ import (
 )
 
 
+func (e *EmailCommonFields) PrepareEmailCommonParams(client *SendCloud) url.Values {
+	params := url.Values{}
+	params.Set("apiUser", client.apiUser)
+	params.Set("apiKey", client.apiKey)
+	params.Set("from", e.From)
+	params.Set("to", e.To)
+	params.Set("subject", e.Subject)
+	if e.ContentSummary!= "" {
+		params.Set("contentSummary", e.ContentSummary)
+	}
+	if e.FromName!= "" {
+		params.Set("fromName", e.FromName)
+	}
+	if e.CC!= "" {
+		params.Set("cc", e.CC)
+	}
+	if e.BCC!= "" {
+		params.Set("bcc", e.BCC)
+	}
+	if e.ReplyTo!= "" {
+		params.Set("replyTo", e.ReplyTo)
+	}
+	if e.LabelName!= "" {
+		params.Set("labelName", e.LabelName)
+	}
+	if e.Headers!= "" {
+		params.Set("headers", e.Headers)
+	}
+	if e.Xsmtpapi!= "" {
+		params.Set("xsmtpapi", e.Xsmtpapi)
+	}
 
+	if e.SendRequestID!= "" {
+		params.Set("sendRequestId", e.SendRequestID)
+	}
+	if e.RespEmailID {
+		params.Set("respEmailId", strconv.FormatBool(e.RespEmailID))
+	}
+	if e.UseNotification {
+		params.Set("useNotification", strconv.FormatBool(e.UseNotification))
+	}
+	if e.UseAddressList {
+		params.Set("useAddressList", strconv.FormatBool(e.UseAddressList))
+	}
+	return params
+}
 
+func (client *SendCloud) PrepareSendCommonEmailParams(e *SendEmailArgs) url.Values {
+	params := e.PrepareEmailCommonParams(client)
+	if e.Plain!= "" {
+		params.Set("plain", e.Plain)
+	}
+	if e.Html!= "" {
+		params.Set("html", e.Html)
+	}
+	return params
+}
 
-func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
+func (client *SendCloud) PrepareSendEmailTemplateParams (e *SendEmailTemplateArgs) url.Values {
+	params := e.PrepareEmailCommonParams(client)
+	params.Set("templateInvokeName", e.TemplateInvokeName)
+	return params
+}
+
+func (e *EmailCommonFields) multipart(client *SendCloud,multipartWriter *multipart.Writer) error {
 
 	var partWriter io.Writer
 
 	var err error
+
+	if client.apiUser != "" {
+		err = multipartWriter.WriteField("apiUser", client.apiUser)
+		if err!= nil {
+			return err
+		}
+	}
+
+	if client.apiKey != "" {
+		err = multipartWriter.WriteField("apiKey", client.apiKey)
+		if err!= nil {
+			return err
+		}
+	}
 
 	if e.From != "" {
 		err = multipartWriter.WriteField("from", e.From)
@@ -34,17 +109,17 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 
 	if e.Subject != "" {
 		err = multipartWriter.WriteField("subject", e.Subject)
-        if err!= nil {
-            return err
-        }
+		if err!= nil {
+			return err
+		}
 	}
 
 
 	if e.ContentSummary!= "" {
 		err = multipartWriter.WriteField("contentSummary", e.ContentSummary)
-        if err!= nil {
-            return err
-        }
+		if err!= nil {
+			return err
+		}
 	}
 
 	if e.FromName != "" {
@@ -120,9 +195,9 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 	if e.RespEmailID {
 		respEmailIDStr := strconv.FormatBool(e.RespEmailID)
 		err = multipartWriter.WriteField("respEmailId", respEmailIDStr)
-        if err!= nil {
-            return err
-        }
+		if err!= nil {
+			return err
+		}
 	}
 
 	if e.UseNotification {
@@ -144,80 +219,12 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 	return nil
 }
 
-func (client *SendCloud) PrepareSendCommonEmailParams(e *SendEmailArgs) (url.Values, error) {
-	params := url.Values{}
-	params.Set("apiUser", client.apiUser)
-	params.Set("apiKey", client.apiKey)
-	params.Set("from", e.From)
-	if e.To!= "" {
-		params.Set("to", e.To)
-	}
-	params.Set("subject", e.Subject)
-	if e.Html!= "" {
-        params.Set("html", e.Html)
-    }
-	if e.ContentSummary!= "" {
-        params.Set("contentSummary", e.ContentSummary)
-    }
-    if e.FromName!= "" {
-        params.Set("fromName", e.FromName)
-    }
-    if e.CC!= "" {
-        params.Set("cc", e.CC)
-    }
-    if e.BCC!= "" {
-        params.Set("bcc", e.BCC)
-    }
-    if e.ReplyTo!= "" {
-        params.Set("replyTo", e.ReplyTo)
-    }
-    if e.LabelName!= "" {
-        params.Set("labelName", e.LabelName)
-    }
-    if e.Headers!= "" {
-    	params.Set("headers", e.Headers)
-	}
-	if e.Xsmtpapi!= "" {
-		params.Set("xsmtpapi", e.Xsmtpapi)
-	}
-	if e.Plain!= "" {
-		params.Set("plain", e.Plain)
-	}
-	if e.SendRequestID!= "" {
-        params.Set("sendRequestId", e.SendRequestID)
-    }
-    if e.RespEmailID {
-		params.Set("respEmailId", strconv.FormatBool(e.RespEmailID))
-    }
-    if e.UseNotification {
-		params.Set("useNotification", strconv.FormatBool(e.UseNotification))
-	}
-	if e.UseAddressList {
-        params.Set("useAddressList", strconv.FormatBool(e.UseAddressList))
-    }
-	return params, nil
-}
-
-func (client *SendCloud) MarshalSendEmailArgs(e *SendEmailArgs) (*multipart.Writer,*bytes.Buffer, error) {
+func (client *SendCloud) MultipartSendEmailArgs(e *SendEmailArgs) (*multipart.Writer,*bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 	multipartWriter := multipart.NewWriter(&buf)
 	var err error
 
-	if client.apiUser != "" {
-		err = multipartWriter.WriteField("apiUser", client.apiUser)
-		if err!= nil {
-			return multipartWriter,nil,err
-		}
-	}
-
-	if client.apiKey != "" {
-		err = multipartWriter.WriteField("apiKey", client.apiKey)
-		if err!= nil {
-			return multipartWriter,nil,err
-		}
-	}
-
-	err = e.multipart(multipartWriter)
+	err = e.multipart(client,multipartWriter)
 	if err != nil {
 		return multipartWriter,nil, err
 	}
@@ -236,6 +243,26 @@ func (client *SendCloud) MarshalSendEmailArgs(e *SendEmailArgs) (*multipart.Writ
         }
 	}
 
+	multipartWriter.Close()
+	return multipartWriter,&buf, nil
+}
+
+func (client *SendCloud) MultipartSendEmailTemplateArgs(e *SendEmailTemplateArgs) (*multipart.Writer,*bytes.Buffer, error) {
+	buf := bytes.Buffer{}
+	multipartWriter := multipart.NewWriter(&buf)
+	var err error
+
+	err = e.multipart(client,multipartWriter)
+	if err != nil {
+		return multipartWriter,nil, err
+	}
+
+	if e.TemplateInvokeName!= "" {
+		err = multipartWriter.WriteField("templateInvokeName", e.TemplateInvokeName)
+		if err!= nil {
+			return multipartWriter,nil, err
+		}
+	}
 	multipartWriter.Close()
 	return multipartWriter,&buf, nil
 }

@@ -52,9 +52,9 @@ func NewSendCloud(apiUser string, apiKey string) (*SendCloud, error) {
 	return sc, nil
 }
 
-func (sc *SendCloud) Request(ctx context.Context, req *http.Request, v interface{}) error {
+func (client *SendCloud) Request(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
-	resp, err := sc.client.Do(req)
+	resp, err := client.client.Do(req)
 	if err != nil {
 		select {
 		case <-ctx.Done():

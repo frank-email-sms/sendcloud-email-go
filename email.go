@@ -3,7 +3,6 @@ package sendcloud_email_go
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 )
@@ -17,29 +16,26 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArg
 	if err := client.validateConfig(); err != nil {
 		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
-	if err := validateSendCommonEmail(args); err != nil {
+	if err := args.validateSendCommonEmail(); err != nil {
 		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
 	var req *http.Request
 	var err error
-
+	sendCommonUrl := client.apiBase + sendCommonPath
 	if args.Attachments == nil {
-		params, err := client.PrepareSendCommonEmailParams(args)
-		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
-		}
+		params:= client.PrepareSendCommonEmailParams(args)
 		formDataEncoded := params.Encode()
-		req, err = http.NewRequest("POST", client.apiBase+sendCommonPath, bytes.NewBufferString(formDataEncoded))
+		req, err = http.NewRequest("POST", sendCommonUrl, bytes.NewBufferString(formDataEncoded))
 		if err != nil {
 			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-		multipartWriter,payload, err := client.MarshalSendEmailArgs(args)
+		multipartWriter,payload, err := client.MultipartSendEmailArgs(args)
 		if err != nil {
 			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
-		req, err = http.NewRequest("POST", client.apiBase+sendCommonPath, payload)
+		req, err = http.NewRequest("POST", sendCommonUrl, payload)
 		if err != nil {
 			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
@@ -53,12 +49,39 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArg
 	return responseData, nil
 }
 
-func validateSendCommonEmail(args *SendEmailArgs) error {
-	switch {
-	case len(args.From) == 0:
-		return errors.New("from cannot be empty")
-	case len(args.Subject) == 0:
-		return errors.New("subject cannot be empty")
+func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *SendEmailTemplateArgs) (*SendEmailResult, error) {
+	if err := client.validateConfig(); err != nil {
+		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
-	return nil
+	if err := args.validateSendEmailTemplate(); err != nil {
+		return nil, fmt.Errorf("failed to send email: %w", err)
+	}
+	var req *http.Request
+	var err error
+	sendTemplateUrl := client.apiBase+sendTemplatePath
+	if args.Attachments == nil {
+		params:= client.PrepareSendEmailTemplateParams(args)
+		formDataEncoded := params.Encode()
+		req, err = http.NewRequest("POST", sendTemplateUrl, bytes.NewBufferString(formDataEncoded))
+		if err != nil {
+			return nil, fmt.Errorf("failed to send email: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+		multipartWriter,payload, err := client.MultipartSendEmailTemplateArgs(args)
+		if err != nil {
+			return nil, fmt.Errorf("failed to send email: %w", err)
+		}
+		req, err = http.NewRequest("POST", sendTemplateUrl, payload)
+		if err != nil {
+			return nil, fmt.Errorf("failed to send email: %w", err)
+		}
+		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
+	}
+	responseData := new(SendEmailResult)
+	err = client.Request(ctx, req, &responseData)
+	if err != nil {
+		return nil, err
+	}
+	return responseData, nil
 }
