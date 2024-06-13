@@ -35,7 +35,7 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArg
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-		payload, err := client.MarshalSendEmailArgs(args)
+		multipartWriter,payload, err := client.MarshalSendEmailArgs(args)
 		if err != nil {
 			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
@@ -43,7 +43,7 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArg
 		if err != nil {
 			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
-		req.Header.Set("Content-Type", "multipart/form-data")
+		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
 	responseData := new(SendEmailResult)
 	err = client.Request(ctx, req, &responseData)

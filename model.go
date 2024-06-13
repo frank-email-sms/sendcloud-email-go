@@ -19,7 +19,6 @@ type EmailCommonFields struct {
 	RespEmailID         bool
 	UseNotification     bool
 	UseAddressList      bool
-	boundary                string
 }
 
 type SendEmailArgs struct {

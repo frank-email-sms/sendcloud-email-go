@@ -2,13 +2,10 @@ package sendcloud_email_go
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"mime/multipart"
-	"net/textproto"
 	"net/url"
 	"strconv"
-	"strings"
 )
 
 
@@ -22,21 +19,21 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 	var err error
 
 	if e.From != "" {
-		err = writeMultipartText(multipartWriter, "from", e.From)
+		err = multipartWriter.WriteField("from", e.From)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.To != "" {
-		err = writeMultipartText(multipartWriter, "to", e.To)
+		err =   multipartWriter.WriteField("to", e.To)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.Subject != "" {
-		err = writeMultipartText(multipartWriter, "subject", e.Subject)
+		err = multipartWriter.WriteField("subject", e.Subject)
         if err!= nil {
             return err
         }
@@ -44,49 +41,49 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 
 
 	if e.ContentSummary!= "" {
-		err = writeMultipartText(multipartWriter, "contentSummary", e.ContentSummary)
+		err = multipartWriter.WriteField("contentSummary", e.ContentSummary)
         if err!= nil {
             return err
         }
 	}
 
 	if e.FromName != "" {
-		err = writeMultipartText(multipartWriter, "fromName", e.FromName)
+		err = multipartWriter.WriteField("fromName", e.FromName)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.CC != "" {
-		err = writeMultipartText(multipartWriter, "cc", e.CC)
+		err = multipartWriter.WriteField("cc", e.CC)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.BCC != "" {
-		err = writeMultipartText(multipartWriter, "bcc", e.BCC)
+		err = multipartWriter.WriteField("bcc", e.BCC)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.ReplyTo != "" {
-		err = writeMultipartText(multipartWriter, "replyTo", e.ReplyTo)
+		err = multipartWriter.WriteField("replyTo", e.ReplyTo)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.LabelName != "" {
-		err = writeMultipartText(multipartWriter, "labelName", e.LabelName)
+		err = multipartWriter.WriteField("labelName", e.LabelName)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.Headers != "" {
-		err = writeMultipartText(multipartWriter, "headers", e.Headers)
+		err = multipartWriter.WriteField("headers", e.Headers)
 		if err != nil {
 			return err
 		}
@@ -95,7 +92,7 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 	if e.Attachments != nil {
 		for _, attachment := range e.Attachments {
 			defer attachment.Close()
-			partWriter, err = multipartWriter.CreateFormFile("attachment", attachment.Name())
+			partWriter, err = multipartWriter.CreateFormFile("attachments", attachment.Name())
 			if err != nil {
 				return err
 			}
@@ -107,14 +104,14 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 	}
 
 	if e.Xsmtpapi != "" {
-		err = writeMultipartText(multipartWriter, "xsmtpapi", e.Xsmtpapi)
+		err = multipartWriter.WriteField("x-smtpapi", e.Xsmtpapi)
 		if err != nil {
 			return err
 		}
 	}
 
 	if e.SendRequestID != "" {
-		err = writeMultipartText(multipartWriter, "sendRequestId", e.SendRequestID)
+		err = multipartWriter.WriteField("sendRequestId", e.SendRequestID)
 		if err != nil {
 			return err
 		}
@@ -122,7 +119,7 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 
 	if e.RespEmailID {
 		respEmailIDStr := strconv.FormatBool(e.RespEmailID)
-        err = writeMultipartText(multipartWriter, "respEmailId", respEmailIDStr)
+		err = multipartWriter.WriteField("respEmailId", respEmailIDStr)
         if err!= nil {
             return err
         }
@@ -130,7 +127,7 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 
 	if e.UseNotification {
 		notificationStr := strconv.FormatBool(e.UseNotification)
-		err = writeMultipartText(multipartWriter, "useNotification", notificationStr)
+		err = multipartWriter.WriteField("useNotification", notificationStr)
 		if err != nil {
 			return err
 		}
@@ -138,7 +135,7 @@ func (e *EmailCommonFields) multipart(multipartWriter *multipart.Writer) error {
 
 	if e.UseAddressList {
 		useAddressListStr := strconv.FormatBool(e.UseAddressList)
-		err = writeMultipartText(multipartWriter, "useAddressList", useAddressListStr)
+		err = multipartWriter.WriteField("useAddressList", useAddressListStr)
 		if err != nil {
 			return err
 		}
@@ -201,74 +198,44 @@ func (client *SendCloud) PrepareSendCommonEmailParams(e *SendEmailArgs) (url.Val
 	return params, nil
 }
 
-func (client *SendCloud) MarshalSendEmailArgs(e *SendEmailArgs) (*bytes.Buffer, error) {
+func (client *SendCloud) MarshalSendEmailArgs(e *SendEmailArgs) (*multipart.Writer,*bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 	multipartWriter := multipart.NewWriter(&buf)
-	multipartWriter.Boundary()
 	var err error
 
 	if client.apiUser != "" {
-		err = writeMultipartText(multipartWriter, "apiUser", client.apiUser)
+		err = multipartWriter.WriteField("apiUser", client.apiUser)
 		if err!= nil {
-			return nil,err
+			return multipartWriter,nil,err
 		}
 	}
 
 	if client.apiKey != "" {
-		err = writeMultipartText(multipartWriter, "apiKey", client.apiKey)
+		err = multipartWriter.WriteField("apiKey", client.apiKey)
 		if err!= nil {
-			return nil,err
+			return multipartWriter,nil,err
 		}
 	}
 
 	err = e.multipart(multipartWriter)
 	if err != nil {
-		return nil, err
+		return multipartWriter,nil, err
 	}
 
 	if e.Html!= "" {
-		err = writeMultipartText(multipartWriter, "html", e.Html)
+		err = multipartWriter.WriteField("html", e.Html)
         if err!= nil {
-            return nil, err
+            return multipartWriter,nil, err
         }
 	}
 
 	if e.Plain!= "" {
-		err = writeMultipartText(multipartWriter, "plain", e.Plain)
+		err = multipartWriter.WriteField("plain", e.Plain)
         if err!= nil {
-            return nil, err
+            return multipartWriter,nil, err
         }
 	}
 
 	multipartWriter.Close()
-	e.boundary = multipartWriter.Boundary()
-	return &buf, nil
-}
-
-
-func escapeQuotes(s string) string {
-	quoteEscaper := strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
-	return quoteEscaper.Replace(s)
-}
-
-func writeMultipart(writer *multipart.Writer, fieldName string, content []byte, contentType string) error {
-	header := textproto.MIMEHeader{}
-	header.Set("Content-Type", contentType)
-	header.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"`, escapeQuotes(fieldName)))
-	part, err := writer.CreatePart(header)
-	if err != nil {
-		return err
-	}
-
-	_, err = part.Write(content)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-
-func writeMultipartText(writer *multipart.Writer, fieldName string, text string) error {
-	return writeMultipart(writer, fieldName, []byte(text), "text/plain")
+	return multipartWriter,&buf, nil
 }

@@ -64,18 +64,16 @@ func (sc *SendCloud) Request(ctx context.Context, req *http.Request, v interface
 		return err
 	}
 
+	err = CheckResponse(resp)
+	if err != nil {
+		defer resp.Body.Close()
+		return err
+	}
+
 	if v != nil {
 		err = json.NewDecoder(resp.Body).Decode(v)
 		if err != nil {
 			return err
-		}
-	}
-	err = CheckResponse(resp)
-	if err != nil {
-		defer resp.Body.Close()
-		_, readErr := io.ReadAll(resp.Body)
-		if readErr != nil {
-			return readErr
 		}
 	}
 
@@ -98,6 +96,10 @@ func CheckResponse(r *http.Response) error {
 		return nil
 	}
 	errorResponse := &ErrorResponse{Response: r}
+	if r.StatusCode == http.StatusNotFound {
+		errorResponse.Message = "Not Found"
+		return errorResponse
+	}
 	data, err := io.ReadAll(r.Body)
 	if err == nil && data != nil {
 		json.Unmarshal(data, errorResponse)
