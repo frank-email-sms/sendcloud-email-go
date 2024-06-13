@@ -1,4 +1,4 @@
-# SendCloud Client for Go  
+# sendcloud-email-go
 
 This Go client provides an interface to interact with SendCloud's email delivery service. It exposes two main methods: `SendCommonEmail` for sending regular emails and `SendEmailTemplate` for sending emails using predefined templates.  
 
