@@ -26,14 +26,18 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	args :=  &emailClient.SendEmailArgs{
-		EmailCommonFields: emailClient.EmailCommonFields{
+	args :=  &emailClient.CommonMail{
+		To: emailClient.Receiver{
 			To: "a@ifaxin.com;b@ifaxin.com",
+		},
+		body: emailClient.MailBody{
 			From: "SendCloud@SendCloud.com",
 			Subject: "Email from SendCloud SDK",
 			FromName: "SendCloud",
 		},
-		Html:  "<p>This is an HTML email.</p>",
+		content: emailClient.TextContent{
+            Html:  "<p>This is an HTML email.</p>",
+        },
 	}
 	result, err := client.SendCommonEmail(ctx, args)
 	if err != nil {
@@ -67,14 +71,18 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	args :=  &emailClient.SendEmailTemplateArgs{
-		EmailCommonFields: emailClient.EmailCommonFields{
+	args :=  &emailClient.TemplateMail{
+		To: emailClient.Receiver{
 			To: "a@ifaxin.com;b@ifaxin.com",
+		},
+		body: emailClient.MailBody{
 			From: "SendCloud@SendCloud.com",
 			Subject: "Email from SendCloud SDK",
 			FromName: "SendCloud",
 		},
-		TemplateInvokeName:  "test_template_active",
+		content: emailClient.TemplateContent{
+			TemplateInvokeName:  "test_template_active",
+		},
 	}
 	result, err := client.SendEmailTemplate(ctx, args)
 	if err != nil {
