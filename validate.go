@@ -9,38 +9,39 @@ const MAX_RECEIVERS = 100
 const MAX_MAILLIST = 5
 const MAX_CONTENT_SIZE = 10 * 1024 * 1024
 
-func (args *SendEmailTemplateArgs)validateSendEmailTemplate() error {
-	if err := args.validateEmailCommonFields(); err != nil {
+func (e *TemplateMail)validateSendEmailTemplate() error {
+	if err := e.To.validateReceiver(); err != nil {
 		return err
 	}
-	if args.TemplateInvokeName == "" {
+	if err := e.body.validateMailBody(); err != nil {
+		return err
+	}
+	if e.content.TemplateInvokeName == "" {
 		return errors.New("templateInvokeName cannot be empty")
 	}
 	return nil
 }
 
-func (args *SendEmailArgs)validateSendCommonEmail() error {
-	if err := args.validateEmailCommonFields(); err != nil {
+func (e *CommonMail)validateSendCommonEmail() error {
+	if err := e.To.validateReceiver(); err != nil {
+		return err
+	}
+	if err := e.body.validateMailBody(); err != nil {
 		return err
 	}
 	switch {
-	case len(args.Html) == 0 && len(args.Plain) == 0:
+	case len(e.content.Html) == 0 && len(e.content.Plain) == 0:
 		return errors.New("html or plain cannot be empty")
-	case len(args.Html) > 0 && len(args.Html) > MAX_CONTENT_SIZE:
+	case len(e.content.Html) > 0 && len(e.content.Html) > MAX_CONTENT_SIZE:
 		return errors.New("html content is too long")
-	case len(args.Plain) > 0 && len(args.Plain) > MAX_CONTENT_SIZE:
+	case len(e.content.Plain) > 0 && len(e.content.Plain) > MAX_CONTENT_SIZE:
 		return errors.New("plain Content is too long")
 	}
 	return nil
 }
 
-func (e *EmailCommonFields)validateEmailCommonFields() error {
-	switch {
-	case len(e.From) == 0:
-		return errors.New("from cannot be empty")
-	case len(e.Subject) == 0:
-		return errors.New("subject cannot be empty")
-	case e.To == "":
+func (e *Receiver)validateReceiver() error {
+	if len(e.To) == 0 {
 		return errors.New("to cannot be empty")
 	}
 	if e.UseAddressList {
@@ -59,6 +60,16 @@ func (e *EmailCommonFields)validateEmailCommonFields() error {
 		if receivers > MAX_RECEIVERS {
 			return errors.New("the total number of receivers exceeds the maximum allowed")
 		}
+	}
+	return nil
+}
+
+func (e *MailBody)validateMailBody() error {
+	switch {
+	case len(e.From) == 0:
+		return errors.New("from cannot be empty")
+	case len(e.Subject) == 0:
+		return errors.New("subject cannot be empty")
 	}
 	return nil
 }

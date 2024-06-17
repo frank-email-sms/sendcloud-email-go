@@ -12,7 +12,7 @@ const (
 	sendTemplatePath = "/apiv2/mail/sendtemplate"
 )
 
-func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArgs) (*SendEmailResult, error) {
+func (client *SendCloud) SendCommonEmail(ctx context.Context, args *CommonMail) (*SendEmailResult, error) {
 	if err := client.validateConfig(); err != nil {
 		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
@@ -22,7 +22,7 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArg
 	var req *http.Request
 	var err error
 	sendCommonUrl := client.apiBase + sendCommonPath
-	if args.Attachments == nil {
+	if args.body.Attachments == nil {
 		params:= client.PrepareSendCommonEmailParams(args)
 		formDataEncoded := params.Encode()
 		req, err = http.NewRequest("POST", sendCommonUrl, bytes.NewBufferString(formDataEncoded))
@@ -31,7 +31,7 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArg
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-		multipartWriter,payload, err := client.MultipartSendEmailArgs(args)
+		multipartWriter,payload, err := client.MultipartSendCommonMail(args)
 		if err != nil {
 			return nil, fmt.Errorf("failed to send email: %w", err)
 		}
@@ -49,7 +49,7 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *SendEmailArg
 	return responseData, nil
 }
 
-func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *SendEmailTemplateArgs) (*SendEmailResult, error) {
+func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *TemplateMail) (*SendEmailResult, error) {
 	if err := client.validateConfig(); err != nil {
 		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
@@ -59,7 +59,7 @@ func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *SendEmailT
 	var req *http.Request
 	var err error
 	sendTemplateUrl := client.apiBase+sendTemplatePath
-	if args.Attachments == nil {
+	if args.body.Attachments == nil {
 		params:= client.PrepareSendEmailTemplateParams(args)
 		formDataEncoded := params.Encode()
 		req, err = http.NewRequest("POST", sendTemplateUrl, bytes.NewBufferString(formDataEncoded))
@@ -68,7 +68,7 @@ func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *SendEmailT
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-		multipartWriter,payload, err := client.MultipartSendEmailTemplateArgs(args)
+		multipartWriter,payload, err := client.MultipartSendEmailTemplate(args)
 		if err != nil {
 			return nil, fmt.Errorf("failed to send email: %w", err)
 		}

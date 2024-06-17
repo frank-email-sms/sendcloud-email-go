@@ -23,8 +23,8 @@ func (client *SendCloud) validateConfig() error {
 		client.apiBase = APIBase
 	}
 	switch {
-	case len(client.apiKey) == 0:
-		return errors.New("apiKey cannot be empty")
+	case len(client.apiUser) == 0:
+		return errors.New("apiUser cannot be empty")
 	case len(client.apiKey) == 0:
 		return errors.New("apiKey cannot be empty")
 	}
@@ -38,9 +38,9 @@ type Response struct {
 func NewSendCloud(apiUser string, apiKey string) (*SendCloud, error) {
 	switch {
 	case len(apiUser) == 0:
-		return nil, errors.New("smsUser cannot be empty")
+		return nil, errors.New("apiUser cannot be empty")
 	case len(apiKey) == 0:
-		return nil, errors.New("smsKey cannot be empty")
+		return nil, errors.New("apiKey cannot be empty")
 	}
 
 	sc := &SendCloud{

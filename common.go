@@ -2,6 +2,7 @@ package sendcloud_email_go
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/url"
@@ -9,12 +10,26 @@ import (
 )
 
 
-func (e *EmailCommonFields) PrepareEmailCommonParams(client *SendCloud) url.Values {
+func (client *SendCloud) PrepareReceiverParams(e *Receiver) url.Values {
 	params := url.Values{}
 	params.Set("apiUser", client.apiUser)
 	params.Set("apiKey", client.apiKey)
-	params.Set("from", e.From)
 	params.Set("to", e.To)
+	if e.CC!= "" {
+		params.Set("cc", e.CC)
+	}
+	if e.BCC!= "" {
+		params.Set("bcc", e.BCC)
+	}
+	if e.UseAddressList {
+		params.Set("useAddressList", strconv.FormatBool(e.UseAddressList))
+	}
+	return params
+}
+
+func (e *MailBody) PrepareMailBodyParams(params *url.Values){
+	params.Set("from", e.From)
+
 	params.Set("subject", e.Subject)
 	if e.ContentSummary!= "" {
 		params.Set("contentSummary", e.ContentSummary)
@@ -22,23 +37,20 @@ func (e *EmailCommonFields) PrepareEmailCommonParams(client *SendCloud) url.Valu
 	if e.FromName!= "" {
 		params.Set("fromName", e.FromName)
 	}
-	if e.CC!= "" {
-		params.Set("cc", e.CC)
-	}
-	if e.BCC!= "" {
-		params.Set("bcc", e.BCC)
-	}
+
 	if e.ReplyTo!= "" {
 		params.Set("replyTo", e.ReplyTo)
 	}
 	if e.LabelName!= "" {
 		params.Set("labelName", e.LabelName)
 	}
-	if e.Headers!= "" {
-		params.Set("headers", e.Headers)
+	if len(e.Headers) > 0 {
+		headers, _ := json.Marshal(e.Headers)
+		params.Set("headers", string(headers))
 	}
-	if e.Xsmtpapi!= "" {
-		params.Set("xsmtpapi", e.Xsmtpapi)
+	if !e.Xsmtpapi.IsEmpty() {
+		xsmtpapi, _ := json.Marshal(e.Xsmtpapi)
+		params.Set("xsmtpapi", string(xsmtpapi))
 	}
 
 	if e.SendRequestID!= "" {
@@ -50,32 +62,28 @@ func (e *EmailCommonFields) PrepareEmailCommonParams(client *SendCloud) url.Valu
 	if e.UseNotification {
 		params.Set("useNotification", strconv.FormatBool(e.UseNotification))
 	}
-	if e.UseAddressList {
-		params.Set("useAddressList", strconv.FormatBool(e.UseAddressList))
+}
+
+func (client *SendCloud) PrepareSendCommonEmailParams(e *CommonMail) url.Values {
+	params := client.PrepareReceiverParams(&e.To)
+	e.body.PrepareMailBodyParams(&params)
+	if e.content.Plain!= "" {
+		params.Set("plain", e.content.Plain)
+	}
+	if e.content.Html!= "" {
+		params.Set("html", e.content.Html)
 	}
 	return params
 }
 
-func (client *SendCloud) PrepareSendCommonEmailParams(e *SendEmailArgs) url.Values {
-	params := e.PrepareEmailCommonParams(client)
-	if e.Plain!= "" {
-		params.Set("plain", e.Plain)
-	}
-	if e.Html!= "" {
-		params.Set("html", e.Html)
-	}
+func (client *SendCloud) PrepareSendEmailTemplateParams (e *TemplateMail) url.Values {
+	params := client.PrepareReceiverParams(&e.To)
+	e.body.PrepareMailBodyParams(&params)
+	params.Set("templateInvokeName", e.content.TemplateInvokeName)
 	return params
 }
 
-func (client *SendCloud) PrepareSendEmailTemplateParams (e *SendEmailTemplateArgs) url.Values {
-	params := e.PrepareEmailCommonParams(client)
-	params.Set("templateInvokeName", e.TemplateInvokeName)
-	return params
-}
-
-func (e *EmailCommonFields) multipart(client *SendCloud,multipartWriter *multipart.Writer) error {
-
-	var partWriter io.Writer
+func (e *Receiver) multipartReceiver(client *SendCloud,multipartWriter *multipart.Writer) error {
 
 	var err error
 
@@ -93,15 +101,48 @@ func (e *EmailCommonFields) multipart(client *SendCloud,multipartWriter *multipa
 		}
 	}
 
-	if e.From != "" {
-		err = multipartWriter.WriteField("from", e.From)
+	if e.To != "" {
+		err =   multipartWriter.WriteField("to", e.To)
 		if err != nil {
 			return err
 		}
 	}
 
-	if e.To != "" {
-		err =   multipartWriter.WriteField("to", e.To)
+	if e.CC != "" {
+		err = multipartWriter.WriteField("cc", e.CC)
+		if err != nil {
+			return err
+		}
+	}
+
+	if e.BCC != "" {
+		err = multipartWriter.WriteField("bcc", e.BCC)
+		if err != nil {
+			return err
+		}
+	}
+
+	if e.UseAddressList {
+		useAddressListStr := strconv.FormatBool(e.UseAddressList)
+		err = multipartWriter.WriteField("useAddressList", useAddressListStr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+
+
+func (e *MailBody) multipartMailBody(multipartWriter *multipart.Writer) error {
+
+	var err error
+
+	var partWriter io.Writer
+
+	if e.From != "" {
+		err = multipartWriter.WriteField("from", e.From)
 		if err != nil {
 			return err
 		}
@@ -129,20 +170,6 @@ func (e *EmailCommonFields) multipart(client *SendCloud,multipartWriter *multipa
 		}
 	}
 
-	if e.CC != "" {
-		err = multipartWriter.WriteField("cc", e.CC)
-		if err != nil {
-			return err
-		}
-	}
-
-	if e.BCC != "" {
-		err = multipartWriter.WriteField("bcc", e.BCC)
-		if err != nil {
-			return err
-		}
-	}
-
 	if e.ReplyTo != "" {
 		err = multipartWriter.WriteField("replyTo", e.ReplyTo)
 		if err != nil {
@@ -157,8 +184,9 @@ func (e *EmailCommonFields) multipart(client *SendCloud,multipartWriter *multipa
 		}
 	}
 
-	if e.Headers != "" {
-		err = multipartWriter.WriteField("headers", e.Headers)
+	if len(e.Headers) > 0 {
+		headers, _ := json.Marshal(e.Headers)
+		err = multipartWriter.WriteField("headers", string(headers))
 		if err != nil {
 			return err
 		}
@@ -178,8 +206,12 @@ func (e *EmailCommonFields) multipart(client *SendCloud,multipartWriter *multipa
 		}
 	}
 
-	if e.Xsmtpapi != "" {
-		err = multipartWriter.WriteField("x-smtpapi", e.Xsmtpapi)
+	if !e.Xsmtpapi.IsEmpty() {
+		xsmtpapi, err := json.Marshal(e.Xsmtpapi)
+		if err != nil {
+			return err
+		}
+		err = multipartWriter.WriteField("xsmtpapi", string(xsmtpapi))
 		if err != nil {
 			return err
 		}
@@ -208,36 +240,33 @@ func (e *EmailCommonFields) multipart(client *SendCloud,multipartWriter *multipa
 		}
 	}
 
-	if e.UseAddressList {
-		useAddressListStr := strconv.FormatBool(e.UseAddressList)
-		err = multipartWriter.WriteField("useAddressList", useAddressListStr)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (client *SendCloud) MultipartSendEmailArgs(e *SendEmailArgs) (*multipart.Writer,*bytes.Buffer, error) {
+func (client *SendCloud) MultipartSendCommonMail(e *CommonMail) (*multipart.Writer,*bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 	multipartWriter := multipart.NewWriter(&buf)
 	var err error
 
-	err = e.multipart(client,multipartWriter)
+	err = e.To.multipartReceiver(client,multipartWriter)
 	if err != nil {
 		return multipartWriter,nil, err
 	}
 
-	if e.Html!= "" {
-		err = multipartWriter.WriteField("html", e.Html)
+	err = e.body.multipartMailBody(multipartWriter)
+	if err != nil {
+		return multipartWriter,nil, err
+	}
+
+	if e.content.Html!= "" {
+		err = multipartWriter.WriteField("html", e.content.Html)
         if err!= nil {
             return multipartWriter,nil, err
         }
 	}
 
-	if e.Plain!= "" {
-		err = multipartWriter.WriteField("plain", e.Plain)
+	if e.content.Plain!= "" {
+		err = multipartWriter.WriteField("plain", e.content.Plain)
         if err!= nil {
             return multipartWriter,nil, err
         }
@@ -247,18 +276,23 @@ func (client *SendCloud) MultipartSendEmailArgs(e *SendEmailArgs) (*multipart.Wr
 	return multipartWriter,&buf, nil
 }
 
-func (client *SendCloud) MultipartSendEmailTemplateArgs(e *SendEmailTemplateArgs) (*multipart.Writer,*bytes.Buffer, error) {
+func (client *SendCloud) MultipartSendEmailTemplate(e *TemplateMail) (*multipart.Writer,*bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 	multipartWriter := multipart.NewWriter(&buf)
 	var err error
 
-	err = e.multipart(client,multipartWriter)
+	err = e.To.multipartReceiver(client,multipartWriter)
 	if err != nil {
 		return multipartWriter,nil, err
 	}
 
-	if e.TemplateInvokeName!= "" {
-		err = multipartWriter.WriteField("templateInvokeName", e.TemplateInvokeName)
+	err = e.body.multipartMailBody(multipartWriter)
+	if err != nil {
+		return multipartWriter,nil, err
+	}
+
+	if e.content.TemplateInvokeName!= "" {
+		err = multipartWriter.WriteField("templateInvokeName", e.content.TemplateInvokeName)
 		if err!= nil {
 			return multipartWriter,nil, err
 		}
