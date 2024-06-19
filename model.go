@@ -172,12 +172,12 @@ type MailCalendar struct {
 }
 
 //SetStartTime - Set the start time of the calendar.
-func (e *MailCalendar) SetStartTime(startTime string) {
+func (e *MailCalendar) SetStartTime(startTime time.Time) {
     e.StartTime = startTime
 }
 
 //SetEndTime - Set the end time of the calendar.
-func (e *MailCalendar) SetEndTime(endTime string) {
+func (e *MailCalendar) SetEndTime(endTime time.Time) {
     e.EndTime = endTime
 }
 
