@@ -2,6 +2,7 @@ package sendcloud_email_go
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -10,32 +11,86 @@ const MAX_MAILLIST = 5
 const MAX_CONTENT_SIZE = 10 * 1024 * 1024
 
 func (e *TemplateMail)validateSendEmailTemplate() error {
-	if err := e.To.validateReceiver(); err != nil {
+	if len(e.To.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
+		return errors.New("to or xsmtpapi cannot be empty")
+	}
+	if len(e.Body.Xsmtpapi.To) == 0 || e.To.UseAddressList {
+		if err := e.To.validateReceiver(); err != nil {
+			return err
+		}
+	}
+	if !e.To.UseAddressList&&!e.Body.Xsmtpapi.IsEmpty() {
+		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
+		if err!= nil {
+			return err
+		}
+	}
+	if err := e.Body.validateMailBody(); err != nil {
 		return err
 	}
-	if err := e.body.validateMailBody(); err != nil {
-		return err
-	}
-	if e.content.TemplateInvokeName == "" {
+	if e.Content.TemplateInvokeName == "" {
 		return errors.New("templateInvokeName cannot be empty")
 	}
 	return nil
 }
 
 func (e *CommonMail)validateSendCommonEmail() error {
-	if err := e.To.validateReceiver(); err != nil {
-		return err
+	if len(e.To.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
+		return errors.New("to or xsmtpapi cannot be empty")
 	}
-	if err := e.body.validateMailBody(); err != nil {
+	if len(e.Body.Xsmtpapi.To) == 0 || e.To.UseAddressList {
+		if err := e.To.validateReceiver(); err != nil {
+			return err
+		}
+	}
+	if !e.To.UseAddressList&&!e.Body.Xsmtpapi.IsEmpty() {
+		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
+		if err!= nil {
+			return err
+		}
+	}
+	if err := e.Body.validateMailBody(); err != nil {
 		return err
 	}
 	switch {
-	case len(e.content.Html) == 0 && len(e.content.Plain) == 0:
+	case len(e.Content.Html) == 0 && len(e.Content.Plain) == 0:
 		return errors.New("html or plain cannot be empty")
-	case len(e.content.Html) > 0 && len(e.content.Html) > MAX_CONTENT_SIZE:
+	case len(e.Content.Html) > 0 && len(e.Content.Html) > MAX_CONTENT_SIZE:
 		return errors.New("html content is too long")
-	case len(e.content.Plain) > 0 && len(e.content.Plain) > MAX_CONTENT_SIZE:
+	case len(e.Content.Plain) > 0 && len(e.Content.Plain) > MAX_CONTENT_SIZE:
 		return errors.New("plain Content is too long")
+	}
+	return nil
+}
+
+func (e *CalendarMail)validateSendCalendarMail() error {
+	if err := e.validateSendCommonEmail(); err != nil {
+		return err
+	}
+	if err := e.Calendar.validateMailCalendar(); err!= nil {
+		return err
+	}
+	return nil
+}
+
+func (e *MailCalendar)validateMailCalendar() error {
+	switch {
+	case e.StartTime.IsZero():
+		return errors.New("startTime cannot be empty")
+    case e.EndTime.IsZero():
+    	return errors.New("endTime cannot be empty")
+    case e.StartTime.After(e.EndTime):
+    	return errors.New("startTime cannot be after endTime")
+	case len(e.Title) == 0:
+		return errors.New("title cannot be empty")
+	case len(e.OrganizerName) == 0:
+		return errors.New("organizerName cannot be empty")
+	case len(e.OrganizerEmail) == 0:
+		return errors.New("organizerEmail cannot be empty")
+	case len(e.Location) == 0:
+		return errors.New("location cannot be empty")
+	case len(e.ParticipatorNames) == 0:
+		return errors.New("participatorNames cannot be empty")
 	}
 	return nil
 }
@@ -70,6 +125,45 @@ func (e *MailBody)validateMailBody() error {
 		return errors.New("from cannot be empty")
 	case len(e.Subject) == 0:
 		return errors.New("subject cannot be empty")
+	}
+	return nil
+}
+
+func (x XSMTPAPI) ValidateXSMTPAPI() error {
+	if len(x.To) != 0 {
+		if len(x.To) > MAX_RECEIVERS{
+			return errors.New("the total number of receivers exceeds the maximum allowed")
+		}
+		if len(x.Sub) != 0 {
+			for key, value := range x.Sub {
+				if !(len(key) >= 2 && key[0] == '%' && key[len(key)-1] == '%') {
+					return errors.New(fmt.Sprintf("the key needs to be in the format '%%...%%'; [%s] does not satisfy this condition", key))
+				}
+				if len(value) != len(x.To) {
+					return errors.New(fmt.Sprintf("the length of sub[%s] list and the number of to elements are not equal", key))
+				}
+			}
+		}
+    }
+	if !x.Filters.IsEmpty() {
+		err := x.Filters.ValidateFilter()
+        if err!= nil {
+            return err
+        }
+	}
+	return nil
+}
+
+
+
+func (f Filter) ValidateFilter() error {
+	switch {
+	case f.SubscriptionTracking.Settings.Enable != "0" && f.SubscriptionTracking.Settings.Enable != "1":
+		return errors.New("subscriptionTracking invalid value for Enable, must be '0' or '1'")
+	case f.OpenTracking.Settings.Enable != "0" && f.OpenTracking.Settings.Enable != "1":
+		return errors.New("openTracking invalid value for Enable, must be '0' or '1'")
+	case f.ClickTracking.Settings.Enable != "0" && f.ClickTracking.Settings.Enable != "1":
+		return errors.New("clickTracking invalid value for Enable, must be '0' or '1'")
 	}
 	return nil
 }

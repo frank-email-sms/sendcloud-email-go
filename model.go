@@ -3,19 +3,26 @@ package sendcloud_email_go
 import (
 	"os"
 	"reflect"
+	"time"
 )
 
 type CommonMail struct {
 	To                  Receiver
-	body 				MailBody
-	content				TextContent
+	Body 				MailBody
+	Content				TextContent
 }
 
 type TemplateMail struct {
 	To                  Receiver
-	body 				MailBody
-	content				TemplateContent
+	Body 				MailBody
+	Content				TemplateContent
 }
+
+type CalendarMail struct {
+	CommonMail
+	Calendar			MailCalendar
+}
+
 
 type TextContent struct {
 	Html              string
@@ -65,8 +72,8 @@ type XSMTPAPI struct {
 	Settings      Settings      `json:"settings,omitempty"`
 }
 
-func (a XSMTPAPI) IsEmpty() bool {
-	return reflect.DeepEqual(a, XSMTPAPI{})
+func (x XSMTPAPI) IsEmpty() bool {
+	return reflect.DeepEqual(x, XSMTPAPI{})
 }
 
 type FilterSettings struct {
@@ -81,6 +88,10 @@ type Filter struct {
 	SubscriptionTracking TrackingFilter `json:"subscription_tracking"`
 	OpenTracking         TrackingFilter `json:"open_tracking"`
 	ClickTracking        TrackingFilter `json:"click_tracking"`
+}
+
+func (f Filter) IsEmpty() bool {
+	return reflect.DeepEqual(f, Filter{})
 }
 
 // UnsubscribeSettings 表示退订设置的结构体
@@ -141,6 +152,88 @@ type Receiver struct {
 	CC                  string
 	BCC                 string
 	UseAddressList      bool
+}
+
+
+type MailCalendar struct {
+	StartTime         time.Time
+	EndTime           time.Time
+	Title             string
+	OrganizerName     string
+	OrganizerEmail    string
+	Location          string
+	Description       string
+	ParticipatorNames string
+	ParticipatorEmails string
+	UID               string
+	IsCancel          bool
+	IsUpdate          bool
+	ValarmTime 		  int
+}
+
+//SetStartTime - Set the start time of the calendar.
+func (e *MailCalendar) SetStartTime(startTime string) {
+    e.StartTime = startTime
+}
+
+//SetEndTime - Set the end time of the calendar.
+func (e *MailCalendar) SetEndTime(endTime string) {
+    e.EndTime = endTime
+}
+
+//SetTitle - Set the title of the calendar.
+func (e *MailCalendar) SetTitle(title string) {
+    e.Title = title
+}
+
+//SetOrganizerName - Set the organizer name of the calendar.
+func (e *MailCalendar) SetOrganizerName(organizerName string) {
+    e.OrganizerName = organizerName
+}
+
+//SetOrganizerEmail - Set the organizer email of the calendar.
+func (e *MailCalendar) SetOrganizerEmail(organizerEmail string) {
+    e.OrganizerEmail = organizerEmail
+}
+
+// SetLocation - Set the location of the calendar.
+func (e *MailCalendar) SetLocation(location string) {
+    e.Location = location
+}
+
+// SetDescription - Set the description of the calendar.
+func (e *MailCalendar) SetDescription(description string) {
+    e.Description = description
+}
+
+// SetParticipatorNames - Set the participator names of the calendar.
+func (e *MailCalendar) SetParticipatorNames(participatorNames string) {
+    e.ParticipatorNames = participatorNames
+}
+
+// SetParticipatorEmails - Set the participator emails of the calendar.
+func (e *MailCalendar) SetParticipatorEmails(participatorEmails string) {
+    e.ParticipatorEmails = participatorEmails
+}
+
+// SetUID - Set the UID of the calendar.
+func (e *MailCalendar) SetUID(uid string) {
+	e.UID = uid
+}
+
+// SetIsCancel - Set the isCancel of the calendar.
+func (e *MailCalendar) SetIsCancel(isCancel bool) {
+    e.IsCancel = isCancel
+}
+
+// SetIsUpdate - Set the isUpdate of the calendar.
+func (e *MailCalendar) SetIsUpdate(isUpdate bool) {
+    e.IsUpdate = isUpdate
+}
+
+// SetValarmTime - Set the valarmTime of the calendar.
+func (e *MailCalendar) SetValarmTime(valarmTime int) {
+    e.ValarmTime = valarmTime
 }
 
 type SendEmailResult struct {
