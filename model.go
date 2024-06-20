@@ -66,8 +66,8 @@ type MailBody struct {
 
 type XSMTPAPI struct {
 	To        []string         `json:"to,omitempty"`
-	Sub       map[string][]any `json:"sub,omitempty"`
-	Pubsub    map[string]any   `json:"pubsub,omitempty"`
+	Sub       map[string][]interface{}  `json:"sub,omitempty"`
+	Pubsub    map[string]interface{}    `json:"pubsub,omitempty"`
 	Filters      Filter    `json:"filters,omitempty"`
 	Settings      Settings      `json:"settings,omitempty"`
 }

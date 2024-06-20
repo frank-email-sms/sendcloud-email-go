@@ -52,7 +52,7 @@ func NewSendCloud(apiUser string, apiKey string) (*SendCloud, error) {
 	return sc, nil
 }
 
-func (client *SendCloud) Request(ctx context.Context, req *http.Request, v interface{}) error {
+func (client *SendCloud) Request(ctx context.Context, req *http.Request, responseResult *SendEmailResult) error {
 	req = req.WithContext(ctx)
 	resp, err := client.client.Do(req)
 	if err != nil {
@@ -70,13 +70,15 @@ func (client *SendCloud) Request(ctx context.Context, req *http.Request, v inter
 		return err
 	}
 
-	if v != nil {
-		err = json.NewDecoder(resp.Body).Decode(v)
+	if responseResult != nil {
+		err = json.NewDecoder(resp.Body).Decode(responseResult)
 		if err != nil {
 			return err
 		}
+		if responseResult.StatusCode!= http.StatusOK {
+			return errors.New(responseResult.Message)
+		}
 	}
-
 	return err
 }
 

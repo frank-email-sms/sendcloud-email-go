@@ -24,6 +24,14 @@ func TestSendCommonEmail(t *testing.T) {
             Html:  "<p>This is an HTML email.</p>",
         },
 	}
+	xsmtpapi := XSMTPAPI{
+		    To: []string{"a@ifaxin.com","b@ifaxin.com"},
+            Sub: map[string][]interface{}{
+                "%name%": {"jack", "rose"},
+                "%money%": {"199", "299"},
+            },
+	}
+	args.Body.SetXsmtpapi(xsmtpapi)
 
 	result, err := client.SendCommonEmail(ctx, args)
 	if err != nil {

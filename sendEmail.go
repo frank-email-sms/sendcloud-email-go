@@ -43,9 +43,9 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *CommonMail) 
 		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
 	responseData := new(SendEmailResult)
-	err = client.Request(ctx, req, &responseData)
+	err = client.Request(ctx, req, responseData)
 	if err != nil {
-		return nil, err
+		return responseData, err
 	}
 	return responseData, nil
 }
@@ -80,9 +80,9 @@ func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *TemplateMa
 		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
 	responseData := new(SendEmailResult)
-	err = client.Request(ctx, req, &responseData)
+	err = client.Request(ctx, req, responseData)
 	if err != nil {
-		return nil, err
+		return responseData, err
 	}
 	return responseData, nil
 }
@@ -120,9 +120,9 @@ func (client *SendCloud) SendCalendarMail(ctx context.Context, args *CalendarMai
 		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
 	responseData := new(SendEmailResult)
-	err = client.Request(ctx, req, &responseData)
+	err = client.Request(ctx, req, responseData)
 	if err != nil {
-		return nil, err
+		return responseData, err
 	}
 	return responseData, nil
 }
