@@ -10,7 +10,7 @@ const MAX_RECEIVERS = 100
 const MAX_MAILLIST = 5
 const MAX_CONTENT_SIZE = 10 * 1024 * 1024
 
-func (e *TemplateMail)validateSendEmailTemplate() error {
+func (e *TemplateMail) validateSendEmailTemplate() error {
 	if len(e.To.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
 		return errors.New("to or xsmtpapi cannot be empty")
 	}
@@ -19,9 +19,9 @@ func (e *TemplateMail)validateSendEmailTemplate() error {
 			return err
 		}
 	}
-	if !e.To.UseAddressList&&!e.Body.Xsmtpapi.IsEmpty() {
+	if !e.To.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
 		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
-		if err!= nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -34,7 +34,7 @@ func (e *TemplateMail)validateSendEmailTemplate() error {
 	return nil
 }
 
-func (e *CommonMail)validateSendCommonEmail() error {
+func (e *CommonMail) validateSendCommonEmail() error {
 	if len(e.To.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
 		return errors.New("to or xsmtpapi cannot be empty")
 	}
@@ -43,9 +43,9 @@ func (e *CommonMail)validateSendCommonEmail() error {
 			return err
 		}
 	}
-	if !e.To.UseAddressList&&!e.Body.Xsmtpapi.IsEmpty() {
+	if !e.To.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
 		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
-		if err!= nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -63,24 +63,24 @@ func (e *CommonMail)validateSendCommonEmail() error {
 	return nil
 }
 
-func (e *CalendarMail)validateSendCalendarMail() error {
+func (e *CalendarMail) validateSendCalendarMail() error {
 	if err := e.validateSendCommonEmail(); err != nil {
 		return err
 	}
-	if err := e.Calendar.validateMailCalendar(); err!= nil {
+	if err := e.Calendar.validateMailCalendar(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (e *MailCalendar)validateMailCalendar() error {
+func (e *MailCalendar) validateMailCalendar() error {
 	switch {
 	case e.StartTime.IsZero():
 		return errors.New("startTime cannot be empty")
-    case e.EndTime.IsZero():
-    	return errors.New("endTime cannot be empty")
-    case e.StartTime.After(e.EndTime):
-    	return errors.New("startTime cannot be after endTime")
+	case e.EndTime.IsZero():
+		return errors.New("endTime cannot be empty")
+	case e.StartTime.After(e.EndTime):
+		return errors.New("startTime cannot be after endTime")
 	case len(e.Title) == 0:
 		return errors.New("title cannot be empty")
 	case len(e.OrganizerName) == 0:
@@ -95,7 +95,7 @@ func (e *MailCalendar)validateMailCalendar() error {
 	return nil
 }
 
-func (e *Receiver)validateReceiver() error {
+func (e *Receiver) validateReceiver() error {
 	if len(e.To) == 0 {
 		return errors.New("to cannot be empty")
 	}
@@ -104,7 +104,7 @@ func (e *Receiver)validateReceiver() error {
 		if len(to) > MAX_MAILLIST {
 			return errors.New("address list exceeds limit")
 		}
-	}else {
+	} else {
 		to := strings.Split(e.To, ";")
 		cc := strings.Split(e.CC, ";")
 		bcc := strings.Split(e.BCC, ";")
@@ -119,7 +119,7 @@ func (e *Receiver)validateReceiver() error {
 	return nil
 }
 
-func (e *MailBody)validateMailBody() error {
+func (e *MailBody) validateMailBody() error {
 	switch {
 	case len(e.From) == 0:
 		return errors.New("from cannot be empty")
@@ -131,7 +131,7 @@ func (e *MailBody)validateMailBody() error {
 
 func (x XSMTPAPI) ValidateXSMTPAPI() error {
 	if len(x.To) != 0 {
-		if len(x.To) > MAX_RECEIVERS{
+		if len(x.To) > MAX_RECEIVERS {
 			return errors.New("the total number of receivers exceeds the maximum allowed")
 		}
 		if len(x.Sub) != 0 {
@@ -144,17 +144,15 @@ func (x XSMTPAPI) ValidateXSMTPAPI() error {
 				}
 			}
 		}
-    }
-	if !x.Filters.IsEmpty() {
+	}
+	if x.Filters != nil {
 		err := x.Filters.ValidateFilter()
-        if err!= nil {
-            return err
-        }
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
-
-
 
 func (f Filter) ValidateFilter() error {
 	switch {

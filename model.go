@@ -68,8 +68,8 @@ type XSMTPAPI struct {
 	To        []string         `json:"to,omitempty"`
 	Sub       map[string][]interface{}  `json:"sub,omitempty"`
 	Pubsub    map[string]interface{}    `json:"pubsub,omitempty"`
-	Filters      Filter    `json:"filters,omitempty"`
-	Settings      Settings      `json:"settings,omitempty"`
+	Filters      *Filter    `json:"filters,omitempty"`
+	Settings      *Settings      `json:"settings,omitempty"`
 }
 
 func (x XSMTPAPI) IsEmpty() bool {
@@ -90,9 +90,6 @@ type Filter struct {
 	ClickTracking        TrackingFilter `json:"click_tracking"`
 }
 
-func (f Filter) IsEmpty() bool {
-	return reflect.DeepEqual(f, Filter{})
-}
 
 // UnsubscribeSettings 表示退订设置的结构体
 type UnsubscribeSettings struct {

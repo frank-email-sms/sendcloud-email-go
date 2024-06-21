@@ -30,6 +30,14 @@ func TestSendCommonEmail(t *testing.T) {
                 "%name%": {"jack", "rose"},
                 "%money%": {"199", "299"},
             },
+            Filters: &Filter{
+		    	    SubscriptionTracking: TrackingFilter{Settings: FilterSettings{Enable: "1"}},
+		    	    OpenTracking: TrackingFilter{Settings: FilterSettings{Enable: "1"}},
+                    ClickTracking: TrackingFilter{Settings: FilterSettings{Enable: "1"}},
+			},
+            Settings: &Settings{
+		    	Unsubscribe: UnsubscribeSettings{PageID: []int{1, 2}},
+			},
 	}
 	args.Body.SetXsmtpapi(xsmtpapi)
 
