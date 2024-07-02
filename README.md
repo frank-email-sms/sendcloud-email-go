@@ -2,6 +2,10 @@
 
 This Go client provides an interface to interact with SendCloud's email delivery service. It exposes two main methods: `SendCommonEmail` for sending regular emails and `SendEmailTemplate` for sending emails using predefined templates.  
 
+## Supported Go Versions  
+
+This SDK supports Go 1.16 and above.
+
 ## SendCommonEmail  
 
 The `SendCommonEmail` method allows you to send a regular email with a custom subject, body, and recipient list.  
@@ -91,6 +95,18 @@ func main() {
 	fmt.Println(result)
 }
 ```
+
+## Code Examples  
+
+All code examples for this project are located in the root directory in the `sendEmail_test.go` file. This file contains tests that demonstrate the usage of the email sending functionality and can also be used as examples for integration into your own code.  
+
+## How to View the Examples  
+
+To view the code examples, simply open the `sendEmail_test.go` file in the root directory of the project. You can also run the tests in this file to see the functionality in action.  
+
+## Running the Tests  
+
+To run the tests in `sendEmail_test.go`, navigate to the root directory of the project and run the following command:  
 
 ### Configuration
 

@@ -1,4 +1,4 @@
-package sendcloud_email_go
+package sendcloud
 
 import (
 	"bytes"
@@ -15,10 +15,10 @@ const (
 
 func (client *SendCloud) SendCommonEmail(ctx context.Context, args *CommonMail) (*SendEmailResult, error) {
 	if err := client.validateConfig(); err != nil {
-		return nil, fmt.Errorf("failed to send email: %w", err)
+		return nil, fmt.Errorf("SendCommonEmail: %w", err)
 	}
 	if err := args.validateSendCommonEmail(); err != nil {
-		return nil, fmt.Errorf("failed to send email: %w", err)
+		return nil, fmt.Errorf("SendCommonEmail: %w", err)
 	}
 	var req *http.Request
 	var err error
@@ -28,22 +28,22 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *CommonMail) 
 		formDataEncoded := params.Encode()
 		req, err = http.NewRequest("POST", sendCommonUrl, bytes.NewBufferString(formDataEncoded))
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendCommonEmail: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
 		multipartWriter,payload, err := client.MultipartSendCommonMail(args)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendCommonEmail: %w", err)
 		}
 		req, err = http.NewRequest("POST", sendCommonUrl, payload)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendCommonEmail: %w", err)
 		}
 		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
 	responseData := new(SendEmailResult)
-	err = client.Request(ctx, req, responseData)
+	err = client.request(ctx, req, responseData)
 	if err != nil {
 		return responseData, err
 	}
@@ -52,10 +52,10 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *CommonMail) 
 
 func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *TemplateMail) (*SendEmailResult, error) {
 	if err := client.validateConfig(); err != nil {
-		return nil, fmt.Errorf("failed to send email: %w", err)
+		return nil, fmt.Errorf("SendEmailTemplate: %w", err)
 	}
 	if err := args.validateSendEmailTemplate(); err != nil {
-		return nil, fmt.Errorf("failed to send email: %w", err)
+		return nil, fmt.Errorf("SendEmailTemplate: %w", err)
 	}
 	var req *http.Request
 	var err error
@@ -65,22 +65,22 @@ func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *TemplateMa
 		formDataEncoded := params.Encode()
 		req, err = http.NewRequest("POST", sendTemplateUrl, bytes.NewBufferString(formDataEncoded))
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendEmailTemplate: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
 		multipartWriter,payload, err := client.MultipartSendEmailTemplate(args)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendEmailTemplate: %w", err)
 		}
 		req, err = http.NewRequest("POST", sendTemplateUrl, payload)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendEmailTemplate: %w", err)
 		}
 		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
 	responseData := new(SendEmailResult)
-	err = client.Request(ctx, req, responseData)
+	err = client.request(ctx, req, responseData)
 	if err != nil {
 		return responseData, err
 	}
@@ -89,13 +89,13 @@ func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *TemplateMa
 
 func (client *SendCloud) SendCalendarMail(ctx context.Context, args *CalendarMail) (*SendEmailResult, error) {
 	if err := client.validateConfig(); err != nil {
-		return nil, fmt.Errorf("failed to send email: %w", err)
+		return nil, fmt.Errorf("SendCalendarMail: %w", err)
 	}
-	if err := args.validateSendCommonEmail(); err != nil {
-		return nil, fmt.Errorf("failed to send email: %w", err)
+	if err := args.validateSendCalendarMail(); err != nil {
+		return nil, fmt.Errorf("SendCalendarMail: %w", err)
 	}
 	if err := args.Calendar.validateMailCalendar(); err != nil {
-		return nil, fmt.Errorf("failed to send email: %w", err)
+		return nil, fmt.Errorf("SendCalendarMail: %w", err)
 	}
 	var req *http.Request
 	var err error
@@ -105,22 +105,22 @@ func (client *SendCloud) SendCalendarMail(ctx context.Context, args *CalendarMai
 		formDataEncoded := params.Encode()
 		req, err = http.NewRequest("POST", sendCalendarUrl, bytes.NewBufferString(formDataEncoded))
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendCalendarMail: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
 		multipartWriter,payload, err := client.MultipartSendCalendarMail(args)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendCalendarMail: %w", err)
 		}
 		req, err = http.NewRequest("POST", sendCalendarUrl, payload)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send email: %w", err)
+			return nil, fmt.Errorf("SendCalendarMail: %w", err)
 		}
 		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
 	responseData := new(SendEmailResult)
-	err = client.Request(ctx, req, responseData)
+	err = client.request(ctx, req, responseData)
 	if err != nil {
 		return responseData, err
 	}

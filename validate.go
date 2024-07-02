@@ -1,4 +1,4 @@
-package sendcloud_email_go
+package sendcloud
 
 import (
 	"errors"
@@ -11,15 +11,15 @@ const MAX_MAILLIST = 5
 const MAX_CONTENT_SIZE = 10 * 1024 * 1024
 
 func (e *TemplateMail) validateSendEmailTemplate() error {
-	if len(e.To.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
+	if len(e.Receiver.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
 		return errors.New("to or xsmtpapi cannot be empty")
 	}
-	if len(e.Body.Xsmtpapi.To) == 0 || e.To.UseAddressList {
-		if err := e.To.validateReceiver(); err != nil {
+	if len(e.Body.Xsmtpapi.To) == 0 || e.Receiver.UseAddressList {
+		if err := e.Receiver.validateReceiver(); err != nil {
 			return err
 		}
 	}
-	if !e.To.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
+	if !e.Receiver.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
 		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
 		if err != nil {
 			return err
@@ -35,15 +35,15 @@ func (e *TemplateMail) validateSendEmailTemplate() error {
 }
 
 func (e *CommonMail) validateSendCommonEmail() error {
-	if len(e.To.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
+	if len(e.Receiver.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
 		return errors.New("to or xsmtpapi cannot be empty")
 	}
-	if len(e.Body.Xsmtpapi.To) == 0 || e.To.UseAddressList {
-		if err := e.To.validateReceiver(); err != nil {
+	if len(e.Body.Xsmtpapi.To) == 0 || e.Receiver.UseAddressList {
+		if err := e.Receiver.validateReceiver(); err != nil {
 			return err
 		}
 	}
-	if !e.To.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
+	if !e.Receiver.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
 		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
 		if err != nil {
 			return err
@@ -64,8 +64,30 @@ func (e *CommonMail) validateSendCommonEmail() error {
 }
 
 func (e *CalendarMail) validateSendCalendarMail() error {
-	if err := e.validateSendCommonEmail(); err != nil {
+	if len(e.Receiver.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
+		return errors.New("to or xsmtpapi cannot be empty")
+	}
+	if len(e.Body.Xsmtpapi.To) == 0 || e.Receiver.UseAddressList {
+		if err := e.Receiver.validateReceiver(); err != nil {
+			return err
+		}
+	}
+	if !e.Receiver.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
+		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
+		if err != nil {
+			return err
+		}
+	}
+	if err := e.Body.validateMailBody(); err != nil {
 		return err
+	}
+	switch {
+	case len(e.Content.Html) == 0 && len(e.Content.Plain) == 0:
+		return errors.New("html or plain cannot be empty")
+	case len(e.Content.Html) > 0 && len(e.Content.Html) > MAX_CONTENT_SIZE:
+		return errors.New("html content is too long")
+	case len(e.Content.Plain) > 0 && len(e.Content.Plain) > MAX_CONTENT_SIZE:
+		return errors.New("plain Content is too long")
 	}
 	if err := e.Calendar.validateMailCalendar(); err != nil {
 		return err
@@ -95,7 +117,7 @@ func (e *MailCalendar) validateMailCalendar() error {
 	return nil
 }
 
-func (e *Receiver) validateReceiver() error {
+func (e *MailReceiver) validateReceiver() error {
 	if len(e.To) == 0 {
 		return errors.New("to cannot be empty")
 	}

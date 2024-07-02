@@ -1,4 +1,4 @@
-package sendcloud_email_go
+package sendcloud
 
 import (
 	"os"
@@ -6,21 +6,47 @@ import (
 	"time"
 )
 
+
 type CommonMail struct {
-	To                  Receiver
-	Body 				MailBody
-	Content				TextContent
+	Receiver MailReceiver
+	Body     MailBody
+	Content  TextContent
 }
 
 type TemplateMail struct {
-	To                  Receiver
-	Body 				MailBody
-	Content				TemplateContent
+	Receiver MailReceiver
+	Body     MailBody
+	Content  TemplateContent
 }
 
 type CalendarMail struct {
-	CommonMail
-	Calendar			MailCalendar
+	Receiver MailReceiver
+	Body     MailBody
+	Content  TextContent
+	Calendar MailCalendar
+}
+
+
+type MailReceiver struct {
+	To                  string
+	CC                  string
+	BCC                 string
+	UseAddressList      bool
+}
+
+type MailBody struct {
+	From                string
+	Subject             string
+	ContentSummary      string
+	FromName            string
+	ReplyTo             string
+	LabelName           string
+	Headers             map[string]string
+	Attachments         []*os.File
+	Xsmtpapi           XSMTPAPI
+	SendRequestID       string
+	RespEmailID         bool
+	UseNotification     bool
 }
 
 
@@ -49,20 +75,6 @@ func (e *TemplateContent) SetTemplateInvokeName(name string) {
 	e.TemplateInvokeName = name
 }
 
-type MailBody struct {
-	From                string
-	Subject             string
-	ContentSummary      string
-	FromName            string
-	ReplyTo             string
-	LabelName           string
-	Headers             map[string]string
-	Attachments         []*os.File
-	Xsmtpapi           XSMTPAPI
-	SendRequestID       string
-	RespEmailID         bool
-	UseNotification     bool
-}
 
 type XSMTPAPI struct {
 	To        []string         `json:"to,omitempty"`
@@ -144,12 +156,6 @@ func (e *MailBody) SetXsmtpapi(xsmtpapi XSMTPAPI) {
 }
 
 
-type Receiver struct {
-	To                  string
-	CC                  string
-	BCC                 string
-	UseAddressList      bool
-}
 
 
 type MailCalendar struct {

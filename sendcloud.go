@@ -1,5 +1,4 @@
-package sendcloud_email_go
-
+package sendcloud
 import (
 	"context"
 	"encoding/json"
@@ -52,7 +51,7 @@ func NewSendCloud(apiUser string, apiKey string) (*SendCloud, error) {
 	return sc, nil
 }
 
-func (client *SendCloud) Request(ctx context.Context, req *http.Request, responseResult *SendEmailResult) error {
+func (client *SendCloud) request(ctx context.Context, req *http.Request, responseResult *SendEmailResult) error {
 	req = req.WithContext(ctx)
 	resp, err := client.client.Do(req)
 	if err != nil {
@@ -64,7 +63,7 @@ func (client *SendCloud) Request(ctx context.Context, req *http.Request, respons
 		return err
 	}
 
-	err = CheckResponse(resp)
+	err = checkResponse(resp)
 	if err != nil {
 		defer resp.Body.Close()
 		return err
@@ -93,7 +92,7 @@ func (r *ErrorResponse) Error() string {
 		r.Response.StatusCode, r.Message)
 }
 
-func CheckResponse(r *http.Response) error {
+func checkResponse(r *http.Response) error {
 	if r.StatusCode == http.StatusOK {
 		return nil
 	}

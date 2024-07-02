@@ -1,4 +1,4 @@
-package sendcloud_email_go
+package sendcloud
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 )
 
 
-func (client *SendCloud) PrepareReceiverParams(e *Receiver) url.Values {
+func (client *SendCloud) PrepareReceiverParams(e *MailReceiver) url.Values {
 	params := url.Values{}
 	params.Set("apiUser", client.apiUser)
 	params.Set("apiKey", client.apiKey)
@@ -96,7 +96,7 @@ func (e *MailCalendar) PrepareMailCalendarParams(params *url.Values){
 }
 
 func (client *SendCloud) PrepareSendCommonEmailParams(e *CommonMail) url.Values {
-	params := client.PrepareReceiverParams(&e.To)
+	params := client.PrepareReceiverParams(&e.Receiver)
 	e.Body.PrepareMailBodyParams(&params)
 	if e.Content.Plain!= "" {
 		params.Set("plain", e.Content.Plain)
@@ -108,14 +108,14 @@ func (client *SendCloud) PrepareSendCommonEmailParams(e *CommonMail) url.Values 
 }
 
 func (client *SendCloud) PrepareSendEmailTemplateParams (e *TemplateMail) url.Values {
-	params := client.PrepareReceiverParams(&e.To)
+	params := client.PrepareReceiverParams(&e.Receiver)
 	e.Body.PrepareMailBodyParams(&params)
 	params.Set("templateInvokeName", e.Content.TemplateInvokeName)
 	return params
 }
 
 func (client *SendCloud) PrepareSendCalendarMailParams(e *CalendarMail) url.Values {
-	params := client.PrepareReceiverParams(&e.To)
+	params := client.PrepareReceiverParams(&e.Receiver)
 	e.Body.PrepareMailBodyParams(&params)
 	if e.Content.Plain!= "" {
 		params.Set("plain", e.Content.Plain)
@@ -127,7 +127,7 @@ func (client *SendCloud) PrepareSendCalendarMailParams(e *CalendarMail) url.Valu
 	return params
 }
 
-func (e *Receiver) multipartReceiver(client *SendCloud,multipartWriter *multipart.Writer) error {
+func (e *MailReceiver) multipartReceiver(client *SendCloud,multipartWriter *multipart.Writer) error {
 
 	var err error
 
@@ -380,7 +380,7 @@ func (client *SendCloud) MultipartSendCommonMail(e *CommonMail) (*multipart.Writ
 	multipartWriter := multipart.NewWriter(&buf)
 	var err error
 
-	err = e.To.multipartReceiver(client,multipartWriter)
+	err = e.Receiver.multipartReceiver(client,multipartWriter)
 	if err != nil {
 		return multipartWriter,nil, err
 	}
@@ -413,7 +413,7 @@ func (client *SendCloud) MultipartSendEmailTemplate(e *TemplateMail) (*multipart
 	multipartWriter := multipart.NewWriter(&buf)
 	var err error
 
-	err = e.To.multipartReceiver(client,multipartWriter)
+	err = e.Receiver.multipartReceiver(client,multipartWriter)
 	if err != nil {
 		return multipartWriter,nil, err
 	}
@@ -438,7 +438,7 @@ func (client *SendCloud) MultipartSendCalendarMail(e *CalendarMail) (*multipart.
 	multipartWriter := multipart.NewWriter(&buf)
 	var err error
 
-	err = e.To.multipartReceiver(client,multipartWriter)
+	err = e.Receiver.multipartReceiver(client,multipartWriter)
 	if err != nil {
 		return multipartWriter,nil, err
 	}
