@@ -18,30 +18,30 @@ package main
 import (
 	"context"
 	"fmt"
-	emailClient "github.com/frank-email-sms/sendcloud-email-go"
+	"github.com/frank-email-sms/sendcloud-email-go"
 	"log"
 	"time"
 )
 
 func main() {
-	client, err := emailClient.NewSendCloud("*", "*")
+	client, err := sendcloud.NewSendCloud("*", "*")
 	if err != nil {
 		log.Fatal(err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	args :=  &emailClient.CommonMail{
-		To: emailClient.Receiver{
+	args :=  &sendcloud.CommonMail{
+		Receiver: sendcloud.MailReceiver{
 			To: "a@ifaxin.com;b@ifaxin.com",
 		},
-		body: emailClient.MailBody{
+		Body: sendcloud.MailBody{
 			From: "SendCloud@SendCloud.com",
 			Subject: "Email from SendCloud SDK",
 			FromName: "SendCloud",
 		},
-		content: emailClient.TextContent{
-            Html:  "<p>This is an HTML email.</p>",
-        },
+		Content: sendcloud.TextContent{
+			Html:  "<p>This is an HTML email.</p>",
+		},
 	}
 	result, err := client.SendCommonEmail(ctx, args)
 	if err != nil {
@@ -63,28 +63,28 @@ package main
 import (
 	"context"
 	"fmt"
-	emailClient "github.com/frank-email-sms/sendcloud-email-go"
+	"github.com/frank-email-sms/sendcloud-email-go"
 	"log"
 	"time"
 )
 
 func main() {
-	client, err := emailClient.NewSendCloud("*", "*")
+	client, err := sendcloud.NewSendCloud("*", "*")
 	if err != nil {
 		log.Fatal(err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	args :=  &emailClient.TemplateMail{
-		To: emailClient.Receiver{
+	args :=  &sendcloud.TemplateMail{
+		Receiver: sendcloud.MailReceiver{
 			To: "a@ifaxin.com;b@ifaxin.com",
 		},
-		body: emailClient.MailBody{
+		Body: sendcloud.MailBody{
 			From: "SendCloud@SendCloud.com",
 			Subject: "Email from SendCloud SDK",
 			FromName: "SendCloud",
 		},
-		content: emailClient.TemplateContent{
+		Content: sendcloud.TemplateContent{
 			TemplateInvokeName:  "test_template_active",
 		},
 	}
