@@ -7,7 +7,6 @@ import (
 	"mime/multipart"
 	"net/url"
 	"strconv"
-	"time"
 )
 
 
@@ -68,8 +67,8 @@ func (e *MailBody) PrepareMailBodyParams(params *url.Values){
 }
 
 func (e *MailCalendar) PrepareMailCalendarParams(params *url.Values){
-	params.Set("startTime", e.StartTime.Format(time.DateTime))
-	params.Set("endTime", e.EndTime.Format(time.DateTime))
+	params.Set("startTime", e.StartTime.Format("2006-01-02 15:04:05"))
+	params.Set("endTime", e.EndTime.Format("2006-01-02 15:04:05"))
 	params.Set("title", e.Title)
 	params.Set("organizerName", e.OrganizerName)
 	params.Set("organizerEmail", e.OrganizerEmail)
@@ -291,14 +290,14 @@ func (e *MailCalendar) multipartMailCalendar(multipartWriter *multipart.Writer) 
 	var err error
 
 	if !e.StartTime.IsZero() {
-		err = multipartWriter.WriteField("startTime", e.StartTime.Format(time.DateTime))
+		err = multipartWriter.WriteField("startTime", e.StartTime.Format("2006-01-02 15:04:05"))
 		if err != nil {
 			return err
 		}
 	}
 
 	if !e.EndTime.IsZero() {
-		err = multipartWriter.WriteField("endTime", e.EndTime.Format(time.DateTime))
+		err = multipartWriter.WriteField("endTime", e.EndTime.Format("2006-01-02 15:04:05"))
         if err != nil {
             return err
         }

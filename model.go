@@ -155,9 +155,6 @@ func (e *MailBody) SetXsmtpapi(xsmtpapi XSMTPAPI) {
 	e.Xsmtpapi = xsmtpapi
 }
 
-
-
-
 type MailCalendar struct {
 	StartTime         time.Time
 	EndTime           time.Time
