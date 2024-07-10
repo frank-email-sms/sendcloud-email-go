@@ -106,7 +106,7 @@ func (client *SendCloud) PrepareSendCommonEmailParams(e *CommonMail) url.Values 
 	return params
 }
 
-func (client *SendCloud) PrepareSendEmailTemplateParams (e *TemplateMail) url.Values {
+func (client *SendCloud) PrepareSendTemplateEmailParams (e *TemplateMail) url.Values {
 	params := client.PrepareReceiverParams(&e.Receiver)
 	e.Body.PrepareMailBodyParams(&params)
 	params.Set("templateInvokeName", e.Content.TemplateInvokeName)
@@ -407,7 +407,7 @@ func (client *SendCloud) MultipartSendCommonMail(e *CommonMail) (*multipart.Writ
 	return multipartWriter,&buf, nil
 }
 
-func (client *SendCloud) MultipartSendEmailTemplate(e *TemplateMail) (*multipart.Writer,*bytes.Buffer, error) {
+func (client *SendCloud) MultipartSendTemplateEmail(e *TemplateMail) (*multipart.Writer,*bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 	multipartWriter := multipart.NewWriter(&buf)
 	var err error

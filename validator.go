@@ -8,11 +8,10 @@ import (
 
 const MAX_RECEIVERS = 100
 const MAX_MAILLIST = 5
-const MAX_CONTENT_SIZE = 10 * 1024 * 1024
 
-func (e *TemplateMail) validateSendEmailTemplate() error {
+func (e *TemplateMail) validateTemplateMail() error {
 	if len(e.Receiver.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
-		return errors.New("to or xsmtpapi cannot be empty")
+		return errors.New("to cannot be empty")
 	}
 	if len(e.Body.Xsmtpapi.To) == 0 || e.Receiver.UseAddressList {
 		if err := e.Receiver.validateReceiver(); err != nil {
@@ -20,7 +19,7 @@ func (e *TemplateMail) validateSendEmailTemplate() error {
 		}
 	}
 	if !e.Receiver.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
-		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
+		err := e.Body.Xsmtpapi.validateXSMTPAPI()
 		if err != nil {
 			return err
 		}
@@ -34,9 +33,9 @@ func (e *TemplateMail) validateSendEmailTemplate() error {
 	return nil
 }
 
-func (e *CommonMail) validateSendCommonEmail() error {
+func (e *CommonMail) validateCommonEmail() error {
 	if len(e.Receiver.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
-		return errors.New("to or xsmtpapi cannot be empty")
+		return errors.New("to cannot be empty")
 	}
 	if len(e.Body.Xsmtpapi.To) == 0 || e.Receiver.UseAddressList {
 		if err := e.Receiver.validateReceiver(); err != nil {
@@ -44,7 +43,7 @@ func (e *CommonMail) validateSendCommonEmail() error {
 		}
 	}
 	if !e.Receiver.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
-		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
+		err := e.Body.Xsmtpapi.validateXSMTPAPI()
 		if err != nil {
 			return err
 		}
@@ -52,20 +51,15 @@ func (e *CommonMail) validateSendCommonEmail() error {
 	if err := e.Body.validateMailBody(); err != nil {
 		return err
 	}
-	switch {
-	case len(e.Content.Html) == 0 && len(e.Content.Plain) == 0:
+	if len(e.Content.Html) == 0 && len(e.Content.Plain) == 0 {
 		return errors.New("html or plain cannot be empty")
-	case len(e.Content.Html) > 0 && len(e.Content.Html) > MAX_CONTENT_SIZE:
-		return errors.New("html content is too long")
-	case len(e.Content.Plain) > 0 && len(e.Content.Plain) > MAX_CONTENT_SIZE:
-		return errors.New("plain Content is too long")
 	}
 	return nil
 }
 
 func (e *CalendarMail) validateSendCalendarMail() error {
 	if len(e.Receiver.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
-		return errors.New("to or xsmtpapi cannot be empty")
+		return errors.New("to cannot be empty")
 	}
 	if len(e.Body.Xsmtpapi.To) == 0 || e.Receiver.UseAddressList {
 		if err := e.Receiver.validateReceiver(); err != nil {
@@ -73,7 +67,7 @@ func (e *CalendarMail) validateSendCalendarMail() error {
 		}
 	}
 	if !e.Receiver.UseAddressList && !e.Body.Xsmtpapi.IsEmpty() {
-		err := e.Body.Xsmtpapi.ValidateXSMTPAPI()
+		err := e.Body.Xsmtpapi.validateXSMTPAPI()
 		if err != nil {
 			return err
 		}
@@ -81,21 +75,16 @@ func (e *CalendarMail) validateSendCalendarMail() error {
 	if err := e.Body.validateMailBody(); err != nil {
 		return err
 	}
-	switch {
-	case len(e.Content.Html) == 0 && len(e.Content.Plain) == 0:
+	if len(e.Content.Html) == 0 && len(e.Content.Plain) == 0 {
 		return errors.New("html or plain cannot be empty")
-	case len(e.Content.Html) > 0 && len(e.Content.Html) > MAX_CONTENT_SIZE:
-		return errors.New("html content is too long")
-	case len(e.Content.Plain) > 0 && len(e.Content.Plain) > MAX_CONTENT_SIZE:
-		return errors.New("plain Content is too long")
 	}
-	if err := e.Calendar.validateMailCalendar(); err != nil {
+	if err := e.Calendar.validateCalendarMail(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (e *MailCalendar) validateMailCalendar() error {
+func (e *MailCalendar) validateCalendarMail() error {
 	switch {
 	case e.StartTime.IsZero():
 		return errors.New("startTime cannot be empty")
@@ -151,7 +140,7 @@ func (e *MailBody) validateMailBody() error {
 	return nil
 }
 
-func (x XSMTPAPI) ValidateXSMTPAPI() error {
+func (x XSMTPAPI) validateXSMTPAPI() error {
 	if len(x.To) != 0 {
 		if len(x.To) > MAX_RECEIVERS {
 			return errors.New("the total number of receivers exceeds the maximum allowed")
@@ -166,6 +155,13 @@ func (x XSMTPAPI) ValidateXSMTPAPI() error {
 				}
 			}
 		}
+	}
+	if len(x.Pubsub) != 0 {
+		for key := range x.Pubsub {
+			if !(len(key) >= 2 && key[0] == '%' && key[len(key)-1] == '%') {
+				return errors.New(fmt.Sprintf("the key needs to be in the format '%%...%%'; [%s] does not satisfy this condition", key))
+			}
+        }
 	}
 	if x.Filters != nil {
 		err := x.Filters.ValidateFilter()

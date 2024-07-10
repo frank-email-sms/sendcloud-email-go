@@ -120,7 +120,7 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *CommonMail) 
 	if err := client.validateConfig(); err != nil {
 		return nil, fmt.Errorf("SendCommonEmail: %w", err)
 	}
-	if err := args.validateSendCommonEmail(); err != nil {
+	if err := args.validateCommonEmail(); err != nil {
 		return nil, fmt.Errorf("SendCommonEmail: %w", err)
 	}
 	var req *http.Request
@@ -153,32 +153,32 @@ func (client *SendCloud) SendCommonEmail(ctx context.Context, args *CommonMail) 
 	return responseData, nil
 }
 
-func (client *SendCloud) SendEmailTemplate(ctx context.Context, args *TemplateMail) (*SendEmailResult, error) {
+func (client *SendCloud) SendTemplateEmail(ctx context.Context, args *TemplateMail) (*SendEmailResult, error) {
 	if err := client.validateConfig(); err != nil {
-		return nil, fmt.Errorf("SendEmailTemplate: %w", err)
+		return nil, fmt.Errorf("SendTemplateEmail: %w", err)
 	}
-	if err := args.validateSendEmailTemplate(); err != nil {
-		return nil, fmt.Errorf("SendEmailTemplate: %w", err)
+	if err := args.validateTemplateMail(); err != nil {
+		return nil, fmt.Errorf("SendTemplateEmail: %w", err)
 	}
 	var req *http.Request
 	var err error
 	sendTemplateUrl := client.apiBase+sendTemplatePath
 	if args.Body.Attachments == nil {
-		params:= client.PrepareSendEmailTemplateParams(args)
+		params:= client.PrepareSendTemplateEmailParams(args)
 		formDataEncoded := params.Encode()
 		req, err = http.NewRequest("POST", sendTemplateUrl, bytes.NewBufferString(formDataEncoded))
 		if err != nil {
-			return nil, fmt.Errorf("SendEmailTemplate: %w", err)
+			return nil, fmt.Errorf("SendTemplateEmail: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-		multipartWriter,payload, err := client.MultipartSendEmailTemplate(args)
+		multipartWriter,payload, err := client.MultipartSendTemplateEmail(args)
 		if err != nil {
-			return nil, fmt.Errorf("SendEmailTemplate: %w", err)
+			return nil, fmt.Errorf("SendTemplateEmail: %w", err)
 		}
 		req, err = http.NewRequest("POST", sendTemplateUrl, payload)
 		if err != nil {
-			return nil, fmt.Errorf("SendEmailTemplate: %w", err)
+			return nil, fmt.Errorf("SendTemplateEmail: %w", err)
 		}
 		req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
 	}
@@ -197,7 +197,7 @@ func (client *SendCloud) SendCalendarMail(ctx context.Context, args *CalendarMai
 	if err := args.validateSendCalendarMail(); err != nil {
 		return nil, fmt.Errorf("SendCalendarMail: %w", err)
 	}
-	if err := args.Calendar.validateMailCalendar(); err != nil {
+	if err := args.Calendar.validateCalendarMail(); err != nil {
 		return nil, fmt.Errorf("SendCalendarMail: %w", err)
 	}
 	var req *http.Request

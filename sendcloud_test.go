@@ -108,7 +108,7 @@ func TestSendCommonEmailWithAttachment(t *testing.T) {
 	t.Log(result)
 }
 
-func TestSendEmailTemplate(t *testing.T) {
+func TestSendTemplateEmail(t *testing.T) {
 	client, err := NewSendCloud("*", "*")
 	if err != nil {
 		t.Fatal(err)
@@ -128,14 +128,14 @@ func TestSendEmailTemplate(t *testing.T) {
 			TemplateInvokeName:  "test_template_active",
 		},
 	}
-	result, err := client.SendEmailTemplate(ctx, args)
+	result, err := client.SendTemplateEmail(ctx, args)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(result)
 }
 
-func TestSendEmailTemplateWithVars(t *testing.T) {
+func TestSendTemplateEmailWithVars(t *testing.T) {
 	client, err := NewSendCloud("*", "*")
 	if err != nil {
 		t.Fatal(err)
@@ -168,14 +168,14 @@ func TestSendEmailTemplateWithVars(t *testing.T) {
 		},
 	}
 	args.Body.SetXsmtpapi(xsmtpapi)
-	result, err := client.SendEmailTemplate(ctx, args)
+	result, err := client.SendTemplateEmail(ctx, args)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(result)
 }
 
-func TestSendEmailTemplateWithAttachment(t *testing.T) {
+func TestSendTemplateEmailWithAttachment(t *testing.T) {
 	client, err := NewSendCloud("*", "*")
 	if err != nil {
 		t.Fatal(err)
@@ -201,7 +201,7 @@ func TestSendEmailTemplateWithAttachment(t *testing.T) {
 		},
 	}
 	args.Body.AddAttachment(attachment1)
-	result, err := client.SendEmailTemplate(ctx, args)
+	result, err := client.SendTemplateEmail(ctx, args)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,6 +1,6 @@
 # sendcloud-email-go
 
-This Go client provides an interface to interact with SendCloud's email delivery service. It exposes two main methods: `SendCommonEmail` for sending regular emails and `SendEmailTemplate` for sending emails using predefined templates.  
+This Go client provides an interface to interact with SendCloud's email delivery service. It exposes two main methods: `SendCommonEmail` for sending regular emails and `SendTemplateEmail` for sending emails using predefined templates.  
 
 ## Supported Go Versions  
 
@@ -51,9 +51,9 @@ func main() {
 }
 ```
 
-## SendEmailTemplate
+## SendTemplateEmail
 
-The `SendEmailTemplate` method allows you to send an email using a predefined template. This is useful when you want to send emails with consistent design and layout.
+The `SendTemplateEmail` method allows you to send an email using a predefined template. This is useful when you want to send emails with consistent design and layout.
 
 ### Usage
 
@@ -88,7 +88,7 @@ func main() {
 			TemplateInvokeName:  "test_template_active",
 		},
 	}
-	result, err := client.SendEmailTemplate(ctx, args)
+	result, err := client.SendTemplateEmail(ctx, args)
 	if err != nil {
 		log.Fatal(err)
 	}
