@@ -1,11 +1,34 @@
 package sendcloud
 
 import (
+	"net/http"
 	"os"
 	"reflect"
 	"time"
 )
 
+const (
+	APIBase = "https://api.sendcloud.net/apiv2/mail"
+	sendCommonPath   = "/send"
+	sendTemplatePath = "/sendtemplate"
+	sendCalendarPath = "/sendcalendar"
+)
+
+type SendCloud struct {
+	apiUser string
+	apiKey  string
+	apiBase string
+	client  *http.Client
+}
+
+type Response struct {
+	*http.Response
+}
+
+type ErrorResponse struct {
+	Response *http.Response // HTTP response that caused this error
+	Message  string         `json:"message"` // error message
+}
 
 type CommonMail struct {
 	Receiver MailReceiver

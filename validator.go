@@ -9,6 +9,19 @@ import (
 const MAX_RECEIVERS = 100
 const MAX_MAILLIST = 5
 
+func (client *SendCloud) validateConfig() error {
+	if len(client.apiBase) == 0 {
+		client.apiBase = APIBase
+	}
+	switch {
+	case len(client.apiUser) == 0:
+		return errors.New("apiUser cannot be empty")
+	case len(client.apiKey) == 0:
+		return errors.New("apiKey cannot be empty")
+	}
+	return nil
+}
+
 func (e *TemplateMail) validateTemplateMail() error {
 	if len(e.Receiver.To) == 0 && len(e.Body.Xsmtpapi.To) == 0 {
 		return errors.New("to cannot be empty")

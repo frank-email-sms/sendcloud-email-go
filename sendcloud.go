@@ -9,44 +9,13 @@ import (
 	"net/http"
 )
 
-const (
-	sendCommonPath   = "/send"
-	sendTemplatePath = "/sendtemplate"
-	sendCalendarPath = "/sendcalendar"
-)
-
-const APIBase string = "https://api.sendcloud.net/apiv2/mail"
-
-type SendCloud struct {
-	apiUser string
-	apiKey  string
-	apiBase string
-	client  *http.Client
-}
-
-func (client *SendCloud) validateConfig() error {
-	if len(client.apiBase) == 0 {
-		client.apiBase = APIBase
-	}
-	switch {
-	case len(client.apiUser) == 0:
-		return errors.New("apiUser cannot be empty")
-	case len(client.apiKey) == 0:
-		return errors.New("apiKey cannot be empty")
-	}
-	return nil
-}
-
-type Response struct {
-	*http.Response
-}
 
 func NewSendCloud(apiUser string, apiKey string) (*SendCloud, error) {
 	switch {
 	case len(apiUser) == 0:
-		return nil, errors.New("apiUser cannot be empty")
+		return nil, errors.New("NewSendCloud: apiUser cannot be empty")
 	case len(apiKey) == 0:
-		return nil, errors.New("apiKey cannot be empty")
+		return nil, errors.New("NewSendCloud: apiKey cannot be empty")
 	}
 
 	sc := &SendCloud{
@@ -88,10 +57,6 @@ func (client *SendCloud) request(ctx context.Context, req *http.Request, respons
 	return err
 }
 
-type ErrorResponse struct {
-	Response *http.Response // HTTP response that caused this error
-	Message  string         `json:"message"` // error message
-}
 
 func (r *ErrorResponse) Error() string {
 	return fmt.Sprintf("%v %v: %d %v",
